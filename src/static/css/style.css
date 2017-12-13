@@ -4,23 +4,26 @@ body {
 }
 
 .title {
-  margin-left: 15px;
-  margin-right: 15px;
   width: 85%;
 }
 
 
 .id {
-  color: red;
+  color: #3D6DE0;
   float: left;
   width: 15%;
+  padding: 1% 0;
   text-align: right;
-  vertical-align: bottom;
 }
 
 
+.overview {
+}
+
 .overview > ul {
   list-style: none;
+  padding: 6px;
+  background: #3d6de00d;
 }
 
 .summary-box {
@@ -36,7 +39,9 @@ body {
   font-size: 20px;
 }
 
-
+.condits{
+  color: #818182;
+}
 
 .subtitle {
   font-size: 20px;
@@ -50,9 +55,6 @@ body {
   margin: 15px;
 }
 
-#drug-condits, #detect-condits{
-  color: #818182;
-}
 
 #label {
   font-weight: 400;
