@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block title %} {{ df.assay_title }}{% endblock %}
+
+
+{% block content %}
+<div class = "row">
+  {% if df.assay_title %}
+  <h1 class = "title">{{ df.assay_title }}</h1>
+  <span class = "id">{{ df.id }}</span>
+  {% else %}
+  <h1>!!!!!!</h1>
+  {% endif %}
+
+</div>
+
+<div class = "row summary-box">
+
+  <div class = "col-sm-9 summary">
+    {{ df.summary}}
+  </div>
+
+  <div class = "col-sm-3 overview">
+    <ul>
+      <li><span id = "label">purpose: </span> {{ df.purpose }}</li>
+      <li><span id = "label">assay type: </span> {{ df.type }}</li>
+      <li><span id = "label">organism: </span> {{ df.org }}</li>
+      <li><span id = "label">strain: </span> {{ df.strain }}</li>
+      <li><span id = "label">detection method: </span> {{ df.detection }}</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class = "row">
+  <div class = "col-sm-6" id = "drug-condits">
+    <div class = "row subtitle">Drug incubation conditions</div>
+    <div class = "row">
+      <div class = "col-7">
+        blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+      </div>
+
+      <div class = "overview">
+        <ul>
+          <li><span id = "label">purpose: </span> {{ df.purpose }}</li>
+          <li><span id = "label">assay type: </span> {{ df.type }}</li>
+          <li><span id = "label">organism: </span> {{ df.org }}</li>
+          <li><span id = "label">strain: </span> {{ df.strain }}</li>
+          <li><span id = "label">detection method: </span> {{ df.detection }}</li>
+        </ul>
+      </div>
+
+    </div>
+
+</div>
+
+<div class = "col-sm-6" id = "detect-condits">
+  <div class = "row subtitle">Detection conditions</div>
+  <div class = "row">
+    <div class = "col-7">
+      blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+    </div>
+
+    <div class = "overview">
+      <ul>
+        <li><span id = "label">purpose: </span> {{ df.purpose }}</li>
+        <li><span id = "label">assay type: </span> {{ df.type }}</li>
+        <li><span id = "label">organism: </span> {{ df.org }}</li>
+        <li><span id = "label">strain: </span> {{ df.strain }}</li>
+        <li><span id = "label">detection method: </span> {{ df.detection }}</li>
+      </ul>
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+
+{% endblock %}
