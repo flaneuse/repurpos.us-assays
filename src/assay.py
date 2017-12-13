@@ -10,66 +10,52 @@ import pandas as pd
 data_file = 'data/assay_descriptions.csv'
 df = pd.read_csv(data_file)
 
-# print(df.head())
-
-print(df.at[0,'title'])
 
 # Create Flask app
 app = Flask(__name__) # Use __name__ for single app; __main__ for multiple mods
 
 @app.route('/assays/')
 
-def make_assays():
-    # assay_df = {
-    #     'assay_title': 'Assay Title',
-    #     'id': 1,
-    #     'summary': 'This is a summary. It is short.',
-    #     'purpose': 'Malaria test',
-    #     'type': 'functional',
-    #     'org': 'Homo sapiens',
-    #     'strain': 'HepG2',
-    #     'detection': 'fluorescence'
-    # }
-    #
+def make_assays(row_id = 0):
 
     # temporarily, and not particularly intelligently: pull out just the first row as a test case.
     # assay_df = df.iloc[[0]].to_dict()
     # longer term-- embed as json?
     assay_df = {
-        'title': df.at[0,'title'],
-        'id': df.at[0, 'id'],
-        'summary': df.at[0,'summary'],
+        'title': df.at[row_id,'title'],
+        'id': df.at[row_id, 'id'],
+        'summary': df.at[row_id,'summary'],
         'overview': {
-            'purpose': df.at[0, 'purpose'],
-            'type': df.at[0, 'type (binding, functional, ADMET)'],
-            'org': df.at[0, 'host_organism'],
-            'strain': df.at[0, 'strain'],
-            'detection': df.at[0, 'detection_method (UV-Vis, Fluorescence, Luminescence)'],
-            'kit': df.at[0, 'kit']
+            'purpose': df.at[row_id, 'purpose'],
+            'type': df.at[row_id, 'type (binding, functional, ADMET)'],
+            'org': df.at[row_id, 'host_organism'],
+            'strain': df.at[row_id, 'strain'],
+            'detection': df.at[row_id, 'detection_method (UV-Vis, Fluorescence, Luminescence)'],
+            'kit': df.at[row_id, 'kit']
             },
-        'incub_summary': df.at[0, 'incubation_description'],
+        'incub_summary': df.at[row_id, 'incubation_description'],
 
         'incub': {
-            'cell_source': df.at[0, 'cell_provider'],
-            'time': df.at[0, 'hours_incubation'],
-            'temp': df.at[0, 'temperature_celsius'],
-            'conc': df.at[0, 'drug_concentration'],
-            'link': df.at[0, 'incubation_link']
+            'cell_source': df.at[row_id, 'cell_provider'],
+            'time': df.at[row_id, 'hours_incubation'],
+            'temp': df.at[row_id, 'temperature_celsius'],
+            'conc': df.at[row_id, 'drug_concentration'],
+            'link': df.at[row_id, 'incubation_link']
         },
 
-        'detect_summary': df.at[0, 'detection_description'],
+        'detect_summary': df.at[row_id, 'detection_description'],
 
         'detect': {
-            'kit': df.at[0, 'kit'],
-            'source': df.at[0, 'assay_provider'],
-            'dye': df.at[0, 'dye'],
-            'conc': df.at[0, 'dye_concentration'],
-            'ex': df.at[0, 'wavelength_abs/ex'],
-            'em': df.at[0, 'wavelength_em'],
-            'detector': df.at[0, 'detector'],
-            'link': df.at[0, 'detection_link']
+            'kit': df.at[row_id, 'kit'],
+            'source': df.at[row_id, 'assay_provider'],
+            'dye': df.at[row_id, 'dye'],
+            'conc': df.at[row_id, 'dye_concentration'],
+            'ex': df.at[row_id, 'wavelength_abs/ex'],
+            'em': df.at[row_id, 'wavelength_em'],
+            'detector': df.at[row_id, 'detector'],
+            'link': df.at[row_id, 'detection_link']
         },
 
     }
 
-    return render_template('assay.html', df = assay_df, title = 'fjsdk')
+    return render_template('assay.html', df = assay_df)

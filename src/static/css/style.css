@@ -22,7 +22,7 @@ body {
 
 .overview > ul {
   list-style: none;
-  padding: 6px;
+  padding: 6px 10px 6px 10px;
   background: #3d6de00d;
 }
 
@@ -41,12 +41,13 @@ body {
 
 .condits{
   color: #818182;
+  padding-top: 6px;
 }
 
 .subtitle {
   font-size: 20px;
   color: #212529;
-  padding-bottom: 6px;
+  padding-bottom: 3px;
   margin-left: 0px;
   margin-right: 0px;
 }

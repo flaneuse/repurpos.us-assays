@@ -65,12 +65,12 @@
 
     <div class = "col-sm-5 overview">
       <ul>
-        <li><span id = "label">assay: </span> {{ df.detect.kit }}</li>
+        <!-- <li><span id = "label">assay: </span> {{ df.detect.kit }}</li> -->
         <li><span id = "label">assay provider: </span> {{ df.detect.source }}</li>
         <li><span id = "label">fluorophore: </span> {{ df.detect.dye }}</li>
         <li><span id = "label">fluorophore concentration: </span> {{ df.detect.conc }}</li>
-        <li><span id = "label">&lambda;<sub>ex</sub>: </span> {{ df.detect.ex }}</li>
-        <li><span id = "label">&lambda;<sub>em</sub>: </span> {{ df.detect.em }}</li>
+        <li><span id = "label">&lambda;<sub>ex</sub>: </span> {{ df.detect.ex }} nm</li>
+        <li><span id = "label">&lambda;<sub>em</sub>: </span> {{ df.detect.em }} nm</li>
         <li><span id = "label">fluorescence reader: </span> {{ df.detect.detector }}</li>
         <li><a id = "label" href = {{ df.detect.link }} target="_blank">protocol</a></li>
 
