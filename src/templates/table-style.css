@@ -1,0 +1,67 @@
+/* Text styling */
+body {
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  color: #212529;
+}
+
+.title {
+  width: 85%;
+}
+
+
+.id {
+  color: #3D6DE0;
+  float: left;
+  width: 15%;
+  padding: 1% 0;
+  text-align: right;
+}
+
+/* Table */
+th {
+  text-align: left;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Dot styling */
+.assay-avg {
+  stroke: #212529;
+  stroke-width: 0.4;
+  fill: #3D6DE0;
+  fill-opacity: 0.4;
+  stroke-opacity: 1;
+}
+
+.val-annot {
+  font-size: 0.7em;
+  opacity: 0.4;
+}
+
+/* Axes */
+
+.axis path {
+    stroke: #212529;
+    fill: none;
+    stroke-width: 0.4px;
+}
+
+/* ticks */
+.axis line {
+  stroke: #212529;
+  fill: none;
+  stroke-width: 0.6px;
+}
+
+.axis .minor line {
+  stroke-width: 0.25px;
+}
+
+#show-axis {
+  opacity: 1;
+}
+
+#hide-axis {
+  opacity: 0;
+}
