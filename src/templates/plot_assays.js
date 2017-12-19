@@ -8,6 +8,8 @@ var dot_size = 5;
 
 var assay_id = 'A00215';
 
+var num_per_page = 10;
+
 
 // ---- Create structure for the table ----
 
@@ -75,12 +77,6 @@ d3.csv('demo_data.csv', function(error, assay_data) {
       return a.ac50 - b.ac50;
     });
 
-  // nest; calculate averages for the same drug.
-
-
-
-
-
 
   // convert numbers to numbers
   assay_data.forEach(function(d) {
@@ -89,9 +85,45 @@ d3.csv('demo_data.csv', function(error, assay_data) {
 
   // TODO: figure out how to prevent data from reloading at every page.
   console.log(assay_data)
-  console.log(d3.min(assay_data, function(d) {
-    return d.val || Infinity;
-  }))
+
+  // nest; calculate averages for the same drug.
+
+  a1 = d3.nest()
+    .key(function(d) {
+      return d.calibr_id
+    })
+    .rollup(function(v) {
+      return {
+        num_cmpds: v.length,
+        avg: d3.mean(v, function(d) {
+          return d.val;
+        }),
+        vals: v.map(function(d) {
+          return d.val;
+        }),
+        datamode: v.map(function(d) {
+          return d.datamode;
+        }),
+        wikidata: v.map(function(d) {
+          return d.wikidata;
+        }),
+        name: v.map(function(d) {
+          return d.pubchem_label;
+        })
+      };
+    })
+    .entries(assay_data)
+
+  a1.forEach(function(d, i) {
+    d.page_num = Math.floor(i / num_per_page);
+  })
+  console.log(a1)
+
+
+  // calculate length of filtered data to generate pagination
+  num_cmpds = assay_data.length;
+
+  num_pages = Math.ceil(num_cmpds / num_per_page);
 
   // -- BIND DATA TO AXES --
   // x.domain(data.map(function(d) { return d.letter; }));
@@ -108,13 +140,22 @@ d3.csv('demo_data.csv', function(error, assay_data) {
 
   // -- TABLE GENERATION --
   // Populate table w/ rows specified by data
-  rows = cmpds.selectAll('tr#table_rows')
+  rows = cmpds.selectAll('#table_rows')
+    // .data(a1)
     .data(assay_data)
     .enter().append('tr#table_rows')
 
 
   // (1) Compound name (TODO: clean up chemical names)
-  rows.append('td').append('a')
+  names = rows.append('td#names')
+
+
+  names
+  // .selectAll('#link')
+    // .data(function(d) {
+    //   return d.value;
+    // })
+    .append('a#link')
     .attr('href', function(d) {
       if (d.wikidata) {
         return drug_url + d.wikidata;
