@@ -10,11 +10,12 @@
   </div>
   <div class = "id">{{ df.id }}</div>
   {% else %}
-  <h1>!!!!!!</h1>
+  <h1>Unknown assay</h1>
   {% endif %}
 
 </div>
 
+<!-- SUMMARY -->
 <div class = "row summary-box">
 
   <div class = "col-sm-9 summary">
@@ -33,7 +34,28 @@
   </div>
 
 </div>
+<!-- end summary -->
 
+<!-- VIS -->
+<h3>Assay data</h3>
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+  </ul>
+</nav>
+
+<table id="assay_table">
+
+</table>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="/static/lib/d3v4+jetpack.js"></script>
+<script src="/static/js/plot_assays.js"></script>
+<!--  end vis -->
+
+
+<!-- DETAILS -->
+<h3>{{ df.title }} protocol</h3>
 <div class = "row">
   <div class = "col-sm-6" id = "drug-condits">
     <div class = "row subtitle">Drug incubation conditions</div>
