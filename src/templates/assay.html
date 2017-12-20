@@ -39,42 +39,46 @@
 <!-- end summary -->
 
 <!-- VIS -->
-<h3>Assay data</h3>
+<div id="vis">
+  <h3>Assay data</h3>
 
-<!-- pagination -->
+  <!-- pagination -->
 
-<!-- Nav tabs -->
-<ul class="nav nav-tabs justify-content-end" id="tabs" role="tablist">
-  <li class="">
-    <ul class="pagination">
-    </ul>
-  </li>
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs justify-content-end" id="tabs" role="tablist">
+    <li class="">
+      <ul class="pagination">
+      </ul>
+    </li>
 
-  <li class="nav-item">
-    <a class="nav-link active" data-toggle="tab" href="#ic50" role="tab">IC<sub>50</sub></a>
-  </li>
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#ic50" role="tab">IC<sub>50</sub></a>
+    </li>
 
-  <li class="nav-item">
-    <a class="nav-link active" data-toggle="tab" href="#ec50" role="tab">EC<sub>50</sub></a>
-  </li>
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#ec50" role="tab">EC<sub>50</sub></a>
+    </li>
 
 
-</ul>
+  </ul>
 
-<!-- Tab panes -->
-<div class="tab-content">
-  <div class="tab-pane active" id="ic50" role="tabpanel">...</div>
-  <div class="tab-pane" id="ec50" role="tabpanel">...</div>
-</div>
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div class="tab-pane active" id="ic50" role="tabpanel">...</div>
+    <div class="tab-pane" id="ec50" role="tabpanel">...</div>
+  </div>
 
-<table id="assay_table">
+  <table id="assay_table">
 
-</table>
+  </table>
 
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="/static/lib/d3v4+jetpack.js"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/plot_assays.js') }}"></script>
-<!--  end vis -->
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="/static/lib/d3v4+jetpack.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/plot_assays.js') }}"></script>
+
+</div> <!--  end vis -->
+
+
 
 
 <!-- DETAILS -->

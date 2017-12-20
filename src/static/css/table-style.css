@@ -23,6 +23,12 @@ li.page {
   font-size: 1.25em;
   background-color: #rgba(255, 0, 0, 0.15);
   text-decoration: none; */
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 4px;
+    /* margin-right: 50px; */
 }
 
 /* TODO: tie hover behavior to selected; prettier active */
