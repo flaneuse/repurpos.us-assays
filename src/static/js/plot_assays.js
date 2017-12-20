@@ -11,42 +11,41 @@ var dot_size = 5;
 
 var assay_id = 'A00215';
 
-var num_per_page = 22;
-
 // var current_page = 0;
+
+// -- Determine sizing for plot
+min_height = 30; // number of pixels per drug in dot plot
+
+// --- Setup margins for svg object
+var margin = {
+  top: 20,
+  right: 40,
+  bottom: 15,
+  left: 100
+}
+
+
+bufferH = 20; // number of pixels to space between vis and nav bar
+container = d3.select('.container').node().getBoundingClientRect();
+windowH = window.innerHeight;
+// Available starting point for the visualization
+nav_container = d3.select('.nav-tabs').node().getBoundingClientRect();
+maxW = nav_container.width;
+
+// Set max height to be the entire height of the window, minus top/bottom buffer
+maxH = windowH - nav_container.bottom - bufferH;
+
+var num_per_page = Math.round((maxH - margin.top)/min_height);
+console.log(num_per_page)
+
 
 // ---- Create structure for the table ----
 
 // Outer selector for the entire table
 cmpds = d3.select('#assay_table')
 
-// --- Create header ---
-header = cmpds.append('tr#table_header');
-
-// Note: it'd obviously be better to pull these directly from the dataset itself.
-// However: some columns are necessary, but shouldn't be displayed as data (e.g. the compound ID)
-
-header.append('th')
-  .text('compound')
-
-header.append('th')
-  .text('EC/IC')
-
-header.append('th')
-  .text('assay data')
-
-header.append('th')
-  .text('structures')
-
-// --- Setup margins for each svg object
-var margin = {
-    top: 20,
-    right: 40,
-    bottom: 5,
-    left: 5
-  },
-  width = 350 - margin.left - margin.right,
-  height = 70 - margin.top - margin.bottom;
+var width = maxW - margin.left - margin.right,
+  height = maxH - margin.top - margin.bottom;
 
 
 // --- Create axes for dot plot ---
@@ -148,15 +147,15 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       return d
     })
 
-    function updatePage(idx) {
+  function updatePage(idx) {
 
-      pg.selectAll(".page-link")
+    pg.selectAll(".page-link")
       .classed('page-selected', function(d, i) {
         return i == idx
       })
 
-      generateTable(idx)
-    }
+    generateTable(idx)
+  }
 
   // EVENT: on clicking breadcrumb, change the page. -----------------------------
   pg.selectAll(".page-link").on("click", function(d, i) {
@@ -178,50 +177,44 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     })
   ]);
 
-function generateTable(current_page){
-  // -- TABLE GENERATION --
-  // Populate table w/ rows specified by data
-  rows = cmpds.selectAll('#table_rows')
-    // .data(a1)
-    .data(assay_data.filter(function(d) {
-      return d.page_num == current_page
-    }))
-    .enter().append('tr#table_rows')
+  function generateTable(current_page) {
+    // -- TABLE GENERATION --
+    // Populate table w/ rows specified by data
+    rows = cmpds.selectAll('#table_rows')
+      // .data(a1)
+      .data(assay_data.filter(function(d) {
+        return d.page_num == current_page
+      }))
+      .enter().append('tr#table_rows')
 
 
-  // (1) Compound name (TODO: clean up chemical names)
-  names = rows.append('td#names')
+    // (1) Compound name (TODO: clean up chemical names)
+    names = rows.append('td#names')
 
 
-  names
-    // .selectAll('#link')
-    // .data(function(d) {
-    //   return d.value;
-    // })
-    .append('a#link')
-    .attr('href', function(d) {
-      if (d.wikidata) {
-        return drug_url + d.wikidata;
-      } else {
-        return null;
-      }
-    })
-    .text(function(d) {
-      if (d.pubchem_label) {
-        return d.pubchem_label;
-      } else {
-        return d.calibr_id;
-      }
-    })
+    names
+      // .selectAll('#link')
+      // .data(function(d) {
+      //   return d.value;
+      // })
+      .append('a#link')
+      .attr('href', function(d) {
+        if (d.wikidata) {
+          return drug_url + d.wikidata;
+        } else {
+          return null;
+        }
+      })
+      .text(function(d) {
+        if (d.pubchem_label) {
+          return d.pubchem_label;
+        } else {
+          return d.calibr_id;
+        }
+      })
+  }
 
-  // (2) data mode (IC vs. EC)
-  rows.append('td')
-    .text(function(d) {
-      return d.datamode;
-    })
-}
-
-generateTable(0);
+  generateTable(0);
 
   // (3) -- DRAW PLOTS --
   // Bind SVG object to each td
@@ -288,13 +281,13 @@ generateTable(0);
     .attr('y', y(0.5));
 
   // (4) add chemical structures
-  rows.append('td')
-    .append('svg').append('image.structs')
-    .attr('xlink:href', '/static/img/tmx.png')
-    .attr('x', 0)
-    .attr('y', 0)
-    .attr('width', 100)
-    .attr('height', 100)
+  // rows.append('td')
+  //   .append('svg').append('image.structs')
+  //   .attr('xlink:href', '/static/img/tmx.png')
+  //   .attr('x', 0)
+  //   .attr('y', 0)
+  //   .attr('width', 100)
+  //   .attr('height', 100)
 
 
 
