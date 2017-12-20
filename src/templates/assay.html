@@ -1,35 +1,37 @@
-{% extends "layout.html" %}
-{% block title %} {{ df.title }}{% endblock %}
-
-
-{% block content %}
-<div class = "row">
+{% extends "layout.html" %} {% block title %} {{ df.title }}{% endblock %} {% block content %}
+<div class="row">
   {% if df.title %}
   <div class="col-10">
-    <h1 class = "title">{{ df.title }}</h1>
+    <h1 class="title">{{ df.title }}</h1>
   </div>
-  <div class = "id">{{ df.id }}</div>
+  <div class="id">{{ df.id }}</div>
   {% else %}
-  <h1>Unknown assay</h1>
-  {% endif %}
+  <h1>Unknown assay</h1> {% endif %}
 
 </div>
 
 <!-- SUMMARY -->
-<div class = "row summary-box">
+<div class="row summary-box">
 
-  <div class = "col-sm-9 summary">
-    {{ df.summary}}
+  <div class="col-sm-9">
+    <div class="summary">
+      {{ df.summary}}
+    </div>
+
+    <div id="viewmore">
+      <a href="#protocol">view detailed protocol</a>
+    </div>
+
   </div>
 
-  <div class = "col-sm-3 overview">
+  <div class="col-sm-3 overview">
     <ul>
-      <li><span id = "label">purpose: </span> {{ df.overview.purpose }}</li>
-      <li><span id = "label">assay type: </span> {{ df.overview.type }}</li>
-      <li><span id = "label">organism: </span> {{ df.overview.org }}</li>
-      <li><span id = "label">strain: </span> {{ df.overview.strain }}</li>
-      <li><span id = "label">detection method: </span> {{ df.overview.detection }}</li>
-      <li><span id = "label">assay: </span> {{ df.overview.kit }}</li>
+      <li><span id="label">purpose: </span> {{ df.overview.purpose }}</li>
+      <li><span id="label">assay type: </span> {{ df.overview.type }}</li>
+      <li><span id="label">organism: </span> {{ df.overview.org }}</li>
+      <li><span id="label">strain: </span> {{ df.overview.strain }}</li>
+      <li><span id="label">detection method: </span> {{ df.overview.detection }}</li>
+      <li><span id="label">assay: </span> {{ df.overview.kit }}</li>
     </ul>
   </div>
 
@@ -76,54 +78,56 @@
 
 
 <!-- DETAILS -->
-<h3>{{ df.title }} protocol</h3>
-<div class = "row">
-  <div class = "col-sm-6" id = "drug-condits">
-    <div class = "row subtitle">Drug incubation conditions</div>
-    <div class = "row">
-      <div class = "col-sm-7 condits">
-        {{ df.incub_summary }}
-      </div>
+<div id="protocol">
+  <h3>{{ df.title }} protocol</h3>
+  <div class="row">
+    <div class="col-sm-6" id="drug-condits">
+      <div class="row subtitle">Drug incubation conditions</div>
+      <div class="row">
+        <div class="col-sm-7 condits">
+          {{ df.incub_summary }}
+        </div>
 
-      <div class = "col-sm-5 overview">
-        <ul>
-          <li><span id = "label">cell provider: </span> {{ df.incub.cell_source }}</li>
-          <li><span id = "label">incubation time: </span> {{ df.incub.time }} h</li>
-          <li><span id = "label">incubation temperature: </span> {{ df.incub.temp }} &deg;C</li>
-          <li><span id = "label">drug concentration: </span> {{ df.incub.conc }}</li>
-          <li><a id = "label" href = {{ df.incub.link }} target="_blank">protocol</a></li>
-        </ul>
+        <div class="col-sm-5 overview">
+          <ul>
+            <li><span id="label">cell provider: </span> {{ df.incub.cell_source }}</li>
+            <li><span id="label">incubation time: </span> {{ df.incub.time }} h</li>
+            <li><span id="label">incubation temperature: </span> {{ df.incub.temp }} &deg;C</li>
+            <li><span id="label">drug concentration: </span> {{ df.incub.conc }}</li>
+            <li><a id="label" href={ { df.incub.link }} target="_blank">protocol</a></li>
+          </ul>
+        </div>
+
       </div>
 
     </div>
 
-</div>
+    <div class="col-sm-6" id="detect-condits">
+      <div class="row subtitle">Detection conditions</div>
+      <div class="row">
+        <div class="col-sm-7 condits">
+          {{ df.detect_summary }}
+        </div>
 
-<div class = "col-sm-6" id = "detect-condits">
-  <div class = "row subtitle">Detection conditions</div>
-  <div class = "row">
-    <div class = "col-sm-7 condits">
-       {{ df.detect_summary }}
-    </div>
+        <div class="col-sm-5 overview">
+          <ul>
+            <!-- <li><span id = "label">assay: </span> {{ df.detect.kit }}</li> -->
+            <li><span id="label">assay provider: </span> {{ df.detect.source }}</li>
+            <li><span id="label">fluorophore: </span> {{ df.detect.dye }}</li>
+            <li><span id="label">fluorophore concentration: </span> {{ df.detect.conc }}</li>
+            <li><span id="label">&lambda;<sub>ex</sub>: </span> {{ df.detect.ex }} nm</li>
+            <li><span id="label">&lambda;<sub>em</sub>: </span> {{ df.detect.em }} nm</li>
+            <li><span id="label">fluorescence reader: </span> {{ df.detect.detector }}</li>
+            <li><a id="label" href={ { df.detect.link }} target="_blank">protocol</a></li>
 
-    <div class = "col-sm-5 overview">
-      <ul>
-        <!-- <li><span id = "label">assay: </span> {{ df.detect.kit }}</li> -->
-        <li><span id = "label">assay provider: </span> {{ df.detect.source }}</li>
-        <li><span id = "label">fluorophore: </span> {{ df.detect.dye }}</li>
-        <li><span id = "label">fluorophore concentration: </span> {{ df.detect.conc }}</li>
-        <li><span id = "label">&lambda;<sub>ex</sub>: </span> {{ df.detect.ex }} nm</li>
-        <li><span id = "label">&lambda;<sub>em</sub>: </span> {{ df.detect.em }} nm</li>
-        <li><span id = "label">fluorescence reader: </span> {{ df.detect.detector }}</li>
-        <li><a id = "label" href = {{ df.detect.link }} target="_blank">protocol</a></li>
+          </ul>
+        </div>
 
-      </ul>
+      </div>
+
     </div>
 
   </div>
 
 </div>
-
-</div>
-
 {% endblock %}

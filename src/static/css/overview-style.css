@@ -1,0 +1,20 @@
+/*Table widths for main assay page*/
+#assays{
+  table-layout: fixed;
+}
+
+#table_id {
+  width: 10%;
+}
+
+#table_assay {
+  width: 30%;
+}
+
+#table_descrip {
+  width: 60%;
+}
+
+td {
+  padding-bottom: 8px;
+}

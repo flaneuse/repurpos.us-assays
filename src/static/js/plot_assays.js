@@ -36,7 +36,6 @@ maxW = nav_container.width;
 maxH = windowH - nav_container.bottom - bufferH;
 
 var num_per_page = Math.round((maxH - margin.top)/min_height);
-console.log(num_per_page)
 
 
 // ---- Create structure for the table ----
