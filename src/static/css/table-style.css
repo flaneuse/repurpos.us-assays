@@ -1,0 +1,72 @@
+/* Table */
+th {
+  text-align: left;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+
+/* Pagination */
+ul.pagination {
+  /* list-style: none; */
+}
+
+li.page {
+    /* display: inline-block;
+    background-color: aliceblue; */
+    /* padding: 14px; */
+    /* border: 5px solid #fff; */
+}
+
+.page-link {
+  /* font-weight: 400;
+  font-size: 1.25em;
+  background-color: #rgba(255, 0, 0, 0.15);
+  text-decoration: none; */
+}
+
+/* TODO: tie hover behavior to selected; prettier active */
+.page-selected {
+color: #f00;
+}
+
+/* Dot styling */
+.assay-avg {
+  stroke: #212529;
+  stroke-width: 0.4;
+  fill: #3D6DE0;
+  fill-opacity: 0.4;
+  stroke-opacity: 1;
+}
+
+.val-annot {
+  font-size: 0.7em;
+  opacity: 0.4;
+}
+
+/* Axes */
+
+.axis path {
+    stroke: #212529;
+    fill: none;
+    stroke-width: 0.4px;
+}
+
+/* ticks */
+.axis line {
+  stroke: #212529;
+  fill: none;
+  stroke-width: 0.6px;
+}
+
+.axis .minor line {
+  stroke-width: 0.25px;
+}
+
+#show-axis {
+  opacity: 1;
+}
+
+#hide-axis {
+  opacity: 0;
+}

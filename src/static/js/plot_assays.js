@@ -8,7 +8,9 @@ var dot_size = 5;
 
 var assay_id = 'A00215';
 
-var num_per_page = 10;
+var num_per_page = 22;
+
+// var current_page = 0;
 
 
 // ---- Create structure for the table ----
@@ -62,14 +64,14 @@ var yAxis = d3.axisLeft(y)
 
 
 // --- Load data, populate table ---
-d3.csv('demo_data.csv', function(error, assay_data) {
+d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
   // -- DATA MANIPULATION --
   // filter out just those for the particular assay
   // // filter values if NA (don't display)
   assay_data = assay_data
-    .filter(function(d) {
+    .filter(function(d, i) {
       return d.genedata_id != assay_id && d.ac50;
     })
     // sort from low to high
@@ -79,9 +81,11 @@ d3.csv('demo_data.csv', function(error, assay_data) {
 
 
   // convert numbers to numbers
-  assay_data.forEach(function(d) {
+  assay_data.forEach(function(d, i) {
     d.val = +d.ac50;
+    d.page_num = Math.floor(i / num_per_page);
   })
+
 
   // TODO: figure out how to prevent data from reloading at every page.
   console.log(assay_data)
@@ -119,11 +123,47 @@ d3.csv('demo_data.csv', function(error, assay_data) {
   })
   console.log(a1)
 
-
+  // -- PAGINATION --
   // calculate length of filtered data to generate pagination
   num_cmpds = assay_data.length;
 
   num_pages = Math.ceil(num_cmpds / num_per_page);
+
+  // generate blank
+  var pages = Array(num_pages).fill(0)
+  pages[0] = 1 // Set the initial page to 1.
+
+  pg = d3.select(".pagination");
+
+  pg.selectAll("li")
+    .data(pages)
+    .enter().append("li.page").append('a.page-link')
+    .attr('href', '#')
+    .text(function(d, i) {
+      return i + 1;
+    })
+    .classed('page-selected', function(d) {
+      return d
+    })
+
+    function updatePage(idx) {
+
+      pg.selectAll(".page-link")
+      .classed('page-selected', function(d, i) {
+        return i == idx
+      })
+
+      generateTable(idx)
+    }
+
+  // EVENT: on clicking breadcrumb, change the page. -----------------------------
+  pg.selectAll(".page-link").on("click", function(d, i) {
+
+    selected_page = this.text - 1;
+
+    updatePage(selected_page);
+  });
+  // end of PAGINATION ------------------------------------------------------------
 
   // -- BIND DATA TO AXES --
   // x.domain(data.map(function(d) { return d.letter; }));
@@ -135,14 +175,15 @@ d3.csv('demo_data.csv', function(error, assay_data) {
       return d.val;
     })
   ]);
-  // y.domain([0, 1]);
 
-
+function generateTable(current_page){
   // -- TABLE GENERATION --
   // Populate table w/ rows specified by data
   rows = cmpds.selectAll('#table_rows')
     // .data(a1)
-    .data(assay_data)
+    .data(assay_data.filter(function(d) {
+      return d.page_num == current_page
+    }))
     .enter().append('tr#table_rows')
 
 
@@ -151,7 +192,7 @@ d3.csv('demo_data.csv', function(error, assay_data) {
 
 
   names
-  // .selectAll('#link')
+    // .selectAll('#link')
     // .data(function(d) {
     //   return d.value;
     // })
@@ -176,6 +217,9 @@ d3.csv('demo_data.csv', function(error, assay_data) {
     .text(function(d) {
       return d.datamode;
     })
+}
+
+generateTable(0);
 
   // (3) -- DRAW PLOTS --
   // Bind SVG object to each td
@@ -220,7 +264,8 @@ d3.csv('demo_data.csv', function(error, assay_data) {
     .data(function(d, i) {
       return [assay_data[i]];
     })
-    .enter().append('g')
+    .enter()
+    .append('g')
 
   dots.append('circle.assay-avg')
     .attr('cx', function(d) {
@@ -243,11 +288,14 @@ d3.csv('demo_data.csv', function(error, assay_data) {
   // (4) add chemical structures
   rows.append('td')
     .append('svg').append('image.structs')
-    .attr('xlink:href', 'tmx.png')
+    .attr('xlink:href', '/static/img/tmx.png')
     .attr('x', 0)
     .attr('y', 0)
     .attr('width', 100)
     .attr('height', 100)
+
+
+
 
 
 
