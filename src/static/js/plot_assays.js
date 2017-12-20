@@ -4,6 +4,9 @@
 // ex.: https://repurpos.us/#/compound_data/Q10859697
 var drug_url = 'https://repurpos.us/#/compound_data/';
 
+var struct_url1 = 'https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=';
+var struct_url2 = '&width=500&height=500';
+var struct_url3 = 'https://pubchem.ncbi.nlm.nih.gov/image/fl.html?cid=60961' // within their viewer
 var dot_size = 5;
 
 var assay_id = 'A00215';
@@ -11,7 +14,6 @@ var assay_id = 'A00215';
 var num_per_page = 22;
 
 // var current_page = 0;
-
 
 // ---- Create structure for the table ----
 
