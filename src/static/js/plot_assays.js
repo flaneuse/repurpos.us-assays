@@ -18,7 +18,7 @@ min_height = 50; // number of pixels per drug in dot plot
 
 // --- Setup margins for svg object
 var margin = {
-  top: 20,
+  top: 50,
   right: 40,
   bottom: 15,
   left: 150
@@ -58,12 +58,16 @@ var y = d3.scaleBand()
   .paddingInner(0.05)
   .paddingOuter(0.1);
 
+var colorScale = d3.scaleLinear()
+  .range(["#2c7bb6", "#00a6ca", "#00ccbc", "#90eb9d", "#ffff8c", "#f9d057", "#f29e2e", "#e76818", "#d7191c"]);
+// d3.scaleSequential(d3.interpolateViridis)
+
 var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
 
 var yAxis = d3.axisLeft(y)
-  .ticks(0)
-  .tickSize(0)
+  // .ticks(0)
+  .tickSize(-width)
 
 // --- Helper functions ---
 // Determing whether the assay measures IC50 or EC50 values.
@@ -114,7 +118,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     d.page_num = Math.floor(i / num_per_page);
   })
 
-  console.log(assay_data)
+  // console.log(assay_data)
 
   // TODO: figure out how to prevent data from reloading at every page.
 
@@ -219,7 +223,6 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
   // -- BIND DATA TO AXES --
-  // x.domain(data.map(function(d) { return d.letter; }));
   // `return d.assay_val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
   // NOTE: Calculate x-domain based on the limits of the *entire* data series, not the filtered data.
   x.domain([d3.max(nested, function(d) {
@@ -227,6 +230,14 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     }),
     d3.min(nested, function(d) {
       return d3.min(d.value.assay_vals)
+    })
+  ]);
+
+  colorScale.domain([d3.max(nested, function(d) {
+      return Math.log10(d3.max(d.value.assay_vals));
+    }),
+    d3.min(nested, function(d) {
+      return Math.log10(d3.min(d.value.assay_vals))
     })
   ]);
 
@@ -290,6 +301,49 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
   svg = d3.selectAll('svg')
 
+  // -- SCALEBAR --
+  var scalebar = dotplot.append("g#scalebar");
+
+  // scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
+  var defs = svg.append('defs');
+  var linearGradient = defs.append('linearGradient')
+    .attr('id', 'linear-gradient')
+    // horizontal gradient
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "0%");
+
+
+  //Append multiple color stops by using D3's data/enter step
+  linearGradient.selectAll("stop")
+    .data(colorScale.range())
+    .enter().append("stop")
+    .attr("offset", function(d, i) {
+      return i / (colorScale.range().length - 1);
+    })
+    .attr("stop-color", function(d) {
+      return d;
+    });
+
+  //Draw the rectangle and fill with gradient
+  scalebar.append("rect")
+    .attr("width", width)
+    .attr("height", 10)
+    .attr("transform", "translate(0, -" + margin.top + ")")
+    .style("fill", "url(#linear-gradient)");
+
+  scalebar.append("text")
+    .attr("class", "annotation-right annotation--x")
+    .attr("transform", "translate(" + width + ", -" + "15" + ")")
+    .text("more potent")
+
+  scalebar.append("text")
+    .attr("class", "annotation-left annotation--x")
+    .attr("transform", "translate(" + 0 + ", -" + "15" + ")")
+    .text("less potent")
+
+  // -- AXES --
   dotplot.append("g")
     .attr("class", "axis axis--x")
     .attr('id', function(d, i) {
@@ -324,7 +378,6 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       return d.value.name;
     });
 
-  // dotplot.selectAll('#dots');
 
   // -- avg. value --
   dot_grp.append("circle.assay-avg")
@@ -334,6 +387,9 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     })
     .attr('cy', function(d) {
       return y(d.value.name) + y.bandwidth() / 2;
+    })
+    .style('fill', function(d) {
+      return colorScale(Math.log10(d.value.avg));
     })
     .attr('r', dot_size);
 
@@ -384,7 +440,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     // .attr("width", struct_size)
     // .attr("height", struct_size)
     .style('background', 'aliceblue')
-    .style('opacity', 0.35);
+    .style('opacity', 0);
 
   struct.append('h4')
     .attr('id', 'rollover-name')
