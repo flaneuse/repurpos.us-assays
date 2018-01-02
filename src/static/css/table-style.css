@@ -1,21 +1,64 @@
 /* Table */
+
 th {
   text-align: left;
   font-weight: 400;
   text-transform: uppercase;
 }
 
+h3#data-title {
+  margin-bottom: 0;
+}
+
+.nav-pills {
+  margin-top: -2rem;
+}
+
+.nav-pills .nav-link {
+  background-color: #2125290d;
+  border-radius: 0px;
+  margin-left: 4px;
+  border: 0px #2125290d solid;
+  border-bottom-width: 4px;
+  color: #21252920;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+  background-color: #21252920;
+  border-color: #21252920;
+  color: #21252980;
+  /* background-color: #3d6de025;
+  border-color: #3d6de025;
+  color: #212529; */
+}
+
+.nav-pills .nav-link:hover {
+  /* background-color: #21252920; */
+  background-color: #3d6de025;
+  color: #3d6de0;
+    border-color: #3d6de025;
+}
+
+.nav-link {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
 
 /* Pagination */
+
 ul.pagination {
   /* list-style: none; */
 }
 
 li.page {
-    /* display: inline-block;
+  /* display: inline-block;
     background-color: aliceblue; */
-    /* padding: 14px; */
-    /* border: 5px solid #fff; */
+  /* padding: 14px; */
+  /* border: 5px solid #fff; */
 }
 
 .page-link {
@@ -23,24 +66,41 @@ li.page {
   font-size: 1.25em;
   background-color: #rgba(255, 0, 0, 0.15);
   text-decoration: none; */
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    margin-top: 4px;
-    /* margin-right: 50px; */
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border-left-width: 0px;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 4px;
+  border-color: white;
+  /* margin-right: 50px; */
 }
 
 /* TODO: tie hover behavior to selected; prettier active */
+
 .page-selected {
-color: #f00;
+  color: #f00;
+  border-color: #f00;
 }
 
 /* Dot styling */
+
 .assay-avg {
   stroke: #212529;
   stroke-width: 0.4;
   fill: #3D6DE0;
+  fill-opacity: 0.4;
+  stroke-opacity: 1;
+}
+
+.assay-val {
+  stroke: #212529;
+  stroke-width: 0.4;
+  fill: #868e96;
   fill-opacity: 0.4;
   stroke-opacity: 1;
 }
@@ -52,13 +112,19 @@ color: #f00;
 
 /* Axes */
 
+.axis--y text {
+  font-size: 1.5em;
+  opacity: 0.75;
+}
+
 .axis path {
-    stroke: #212529;
-    fill: none;
-    stroke-width: 0.4px;
+  stroke: #212529;
+  fill: none;
+  stroke-width: 0.4px;
 }
 
 /* ticks */
+
 .axis line {
   stroke: #212529;
   fill: none;

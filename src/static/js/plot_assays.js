@@ -11,21 +11,21 @@ var dot_size = 5;
 
 var assay_id = 'A00215';
 
-// var current_page = 0;
+var current_page = 0;
 
 // -- Determine sizing for plot
-min_height = 30; // number of pixels per drug in dot plot
+min_height = 50; // number of pixels per drug in dot plot
 
 // --- Setup margins for svg object
 var margin = {
   top: 20,
   right: 40,
   bottom: 15,
-  left: 100
+  left: 150
 }
 
 
-bufferH = 20; // number of pixels to space between vis and nav bar
+bufferH = 75; // number of pixels to space between vis and nav bar + bottom
 container = d3.select('.container').node().getBoundingClientRect();
 windowH = window.innerHeight;
 // Available starting point for the visualization
@@ -35,7 +35,7 @@ maxW = nav_container.width;
 // Set max height to be the entire height of the window, minus top/bottom buffer
 maxH = windowH - nav_container.bottom - bufferH;
 
-var num_per_page = Math.round((maxH - margin.top)/min_height);
+var num_per_page = Math.round((maxH - margin.top) / min_height);
 
 
 // ---- Create structure for the table ----
@@ -52,8 +52,10 @@ var width = maxW - margin.left - margin.right,
 var x = d3.scaleLog()
   .rangeRound([0, width]);
 
-var y = d3.scaleLinear()
-  .rangeRound([height, 0]);
+var y = d3.scaleBand()
+  .rangeRound([0, height])
+  .paddingInner(0.05)
+  .paddingOuter(0.1);
 
 var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
@@ -62,6 +64,29 @@ var yAxis = d3.axisLeft(y)
   .ticks(0)
   .tickSize(0)
 
+// --- Helper functions ---
+// Determing whether the assay measures IC50 or EC50 values.
+function findMode(assay_type) {
+  var assay_type = assay_type.toLowerCase();
+
+  var mode;
+
+  switch (assay_type) {
+    case 'decreasing':
+      mode = 'IC';
+      break;
+
+    case 'increasing':
+      mode = 'EC';
+      break;
+
+    default:
+      mode = 'unknown';
+      break;
+  }
+
+  return mode;
+}
 
 // --- Load data, populate table ---
 d3.csv('/static/demo_data.csv', function(error, assay_data) {
@@ -74,25 +99,19 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .filter(function(d, i) {
       return d.genedata_id != assay_id && d.ac50;
     })
-    // sort from low to high
-    .sort(function(a, b) {
-      return a.ac50 - b.ac50;
-    });
-
 
   // convert numbers to numbers
   assay_data.forEach(function(d, i) {
-    d.val = +d.ac50;
+    d.assay_val = +d.ac50;
     d.page_num = Math.floor(i / num_per_page);
   })
 
-
-  // TODO: figure out how to prevent data from reloading at every page.
   console.log(assay_data)
 
-  // nest; calculate averages for the same drug.
+  // TODO: figure out how to prevent data from reloading at every page.
 
-  a1 = d3.nest()
+  // nest; calculate averages for the same drug.
+  nested = d3.nest()
     .key(function(d) {
       return d.calibr_id
     })
@@ -100,28 +119,53 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       return {
         num_cmpds: v.length,
         avg: d3.mean(v, function(d) {
-          return d.val;
+          return d.assay_val;
         }),
-        vals: v.map(function(d) {
-          return d.val;
+        assay_vals: v.map(function(d) {
+          return d.assay_val;
         }),
         datamode: v.map(function(d) {
           return d.datamode;
         }),
         wikidata: v.map(function(d) {
-          return d.wikidata;
+          if (d.wikidata) {
+            return d.wikidata;
+          }
+        }),
+        pubchem_id: v.map(function(d) {
+          if (d['PubChem CID']) {
+            return d['PubChem CID'].replace('CID', ''); // remvoe extra ID string.
+          }
         }),
         name: v.map(function(d) {
-          return d.pubchem_label;
+          if (d.pubchem_label) {
+            return d.pubchem_label;
+          } else {
+            return d.calibr_id;
+          }
         })
       };
     })
     .entries(assay_data)
+    // Sort by the average values
+    .sort(
+      function(a, b) {
+        return a.value.avg - b.value.avg;
+      });
 
-  a1.forEach(function(d, i) {
-    d.page_num = Math.floor(i / num_per_page);
-  })
-  console.log(a1)
+
+  nested
+    // Calculate page numbers; remove duplicate values that came along for the ride.
+    // TODO: figure out if there's a less kludgey way to do this. Also check if the rollup has the same values.
+    .forEach(function(d, i) {
+      d.page_num = Math.floor(i / num_per_page);
+      d.value.assay_type = findMode(d.value.datamode[0]);
+      d.value.name = d.value.name[0];
+      d.value.wikidata = d.value.wikidata[0];
+      d.value.pubchem_id = d.value.pubchem_id[0];
+
+    })
+  console.log(nested)
 
   // -- PAGINATION --
   // calculate length of filtered data to generate pagination
@@ -165,70 +209,80 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   });
   // end of PAGINATION ------------------------------------------------------------
 
+
   // -- BIND DATA TO AXES --
   // x.domain(data.map(function(d) { return d.letter; }));
-  // `return d.val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
-  x.domain([d3.max(assay_data, function(d) {
-      return d.val;
+  // `return d.assay_val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
+  // NOTE: Calculate x-domain based on the limits of the *entire* data series, not the filtered data.
+  x.domain([d3.max(nested, function(d) {
+      return d3.max(d.value.assay_vals);
     }),
-    d3.min(assay_data, function(d) {
-      return d.val;
+    d3.min(nested, function(d) {
+      return d3.min(d.value.assay_vals)
     })
   ]);
 
-  function generateTable(current_page) {
-    // -- TABLE GENERATION --
-    // Populate table w/ rows specified by data
-    rows = cmpds.selectAll('#table_rows')
-      // .data(a1)
-      .data(assay_data.filter(function(d) {
-        return d.page_num == current_page
-      }))
-      .enter().append('tr#table_rows')
+
+  // Filter data to be only those compounds that exist on the current page.
+  var filtered_data = nested.filter(function(d) {
+    return d.page_num == current_page
+  });
 
 
-    // (1) Compound name (TODO: clean up chemical names)
-    names = rows.append('td#names')
+  // Set y-domain
+  // TODO: remove dupes in names
+  y.domain(filtered_data.map(function(d) {
+    // return [...new Set(d.value.name)];
+    return d.value.name;
+  }));
 
 
-    names
-      // .selectAll('#link')
-      // .data(function(d) {
-      //   return d.value;
-      // })
-      .append('a#link')
-      .attr('href', function(d) {
-        if (d.wikidata) {
-          return drug_url + d.wikidata;
-        } else {
-          return null;
-        }
-      })
-      .text(function(d) {
-        if (d.pubchem_label) {
-          return d.pubchem_label;
-        } else {
-          return d.calibr_id;
-        }
-      })
-  }
+  // function generateTable(current_page) {
 
-  generateTable(0);
+
+
+  // (1) Compound name (TODO: clean up chemical names)
+  //   names = rows.append('td#names')
+  //
+  //
+  //   names
+  //     // .selectAll('#link')
+  //     // .data(function(d) {
+  //     //   return d.value;
+  //     // })
+  //     .append('a#link')
+  //     .attr('href', function(d) {
+  //       if (d.wikidata) {
+  //         return drug_url + d.wikidata;
+  //       } else {
+  //         return null;
+  //       }
+  //     })
+  //     .text(function(d) {
+  //       if (d.pubchem_label) {
+  //         return d.pubchem_label;
+  //       } else {
+  //         return d.calibr_id;
+  //       }
+  //     })
+  // // }
+  //
+  // generateTable(0);
 
   // (3) -- DRAW PLOTS --
   // Bind SVG object to each td
-  sparklines = rows.append('td.sparklines')
+  d3.select("#dotplot-container")
     .append('svg')
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-    .append("g")
+    .append("g#dotplot")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  g = d3.selectAll('g')
+  dotplot = d3.selectAll('#dotplot');
 
   svg = d3.selectAll('svg')
 
-  g.append("g")
+  dotplot.append("g")
     .attr("class", "axis axis--x")
     .attr('id', function(d, i) {
       if (i == 0) {
@@ -248,49 +302,70 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .classed("minor", true);
 
 
-  g.append("g")
+  dotplot.append("g")
     .attr("class", "axis axis--y")
     .call(yAxis);
   // .call(d3.axisLeft(y).ticks(2, 'f')) // display y-axis, for testing purposes
 
-  // dot plots of values
-  dots = g.selectAll('circle')
-    .data(function(d, i) {
-      return [assay_data[i]];
-    })
-    .enter()
-    .append('g')
+  // -- DOTS --
+  var dot_grp = dotplot.append("g#graph")
+    .selectAll(".avg")
+    .data(filtered_data)
+    .enter().append("g.dots")
+    .attr("id", function(d) {
+      return d.value.name;
+    });
 
-  dots.append('circle.assay-avg')
+  // dotplot.selectAll('#dots');
+
+  // -- avg. value --
+  dot_grp.append("circle.assay-avg")
+    // .at('cx', compose(x, ƒ('value.avg')))
     .attr('cx', function(d) {
-      return x(d.val);
+      return x(d.value.avg)
     })
-    .attr('cy', y(0.5))
+    .attr('cy', function(d) {
+      return y(d.value.name) + y.bandwidth() / 2;
+    })
     .attr('r', dot_size);
 
-  // dot plots of values
-  dots.append('text.val-annot')
-    .attr("dominant-baseline", "middle")
-    .text(function(d) {
-      return d3.format(".1e")(d.val);
+  // --- not avg. value ---
+
+  // console.log(dot_grp.data())
+
+  var circles = dot_grp.selectAll(".assay-val") // start a nested selection
+    .data(function(d, i) {
+      // console.log(d)
+      // var filtered = d.filter(function(e) {
+      //   return e.value.num_cmpds > 1;
+      // })
+      //
+
+      if (d.value.num_cmpds > 1) {
+        // only return values if there are more than one compound;
+        return d.value.assay_vals;
+      } else {
+        return '';
+      }
     })
-    .attr('x', function(d) {
-      return x(d.val) + dot_size * 1.75;
+    .enter().append("circle.assay-val")
+    .attr('cx', function(d, i) {
+      return x(d);
     })
-    .attr('y', y(0.5));
+    .attr('cy', function(d) {
+      return y(this.parentNode.id) + y.bandwidth() / 2;;
+    })
+    .attr('r', dot_size * 0.75);
 
-  // (4) add chemical structures
-  // rows.append('td')
-  //   .append('svg').append('image.structs')
-  //   .attr('xlink:href', '/static/img/tmx.png')
-  //   .attr('x', 0)
-  //   .attr('y', 0)
-  //   .attr('width', 100)
-  //   .attr('height', 100)
-
-
-
-
-
+  // // dot plots of values
+  // dots.append('text.val-annot')
+  //   .attr("dominant-baseline", "middle")
+  //   .text(function(d) {
+  //     return d3.format(".1e")(d.assay_val);
+  //   })
+  //   .attr('x', function(d) {
+  //     return x(d.assay_val) + dot_size * 1.75;
+  //   })
+  //   .attr('y', y(0.5));
 
 }); // ---- END OF CSV IMPORT
