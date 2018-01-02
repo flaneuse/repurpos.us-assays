@@ -1,4 +1,4 @@
-/* Table */
+/* text */
 
 th {
   text-align: left;
@@ -10,13 +10,40 @@ h3#data-title {
   margin-bottom: 0;
 }
 
+#protocol h3{
+  margin-top: 0.5rem;
+}
+
+/* Rollover */
+.rollover-avg {
+  color: blue;
+  font-size: 1.2em;
+  font-weight: 400;
+}
+
+.rollover-indiv {
+  padding-left: 12px;
+}
+
+#dotplot-container {
+  position: relative;
+}
+
+#structs {
+  padding: 6px;
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+}
+
+/* nav elements:  tab panes, pagination */
 .nav-pills {
   margin-top: -2rem;
 }
 
 .nav-pills .nav-link {
   background-color: #2125290d;
-  border-radius: 0px;
+  border-radius: 1px;
   margin-left: 4px;
   border: 0px #2125290d solid;
   border-bottom-width: 4px;

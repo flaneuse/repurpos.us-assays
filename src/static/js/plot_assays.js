@@ -34,6 +34,7 @@ maxW = nav_container.width;
 
 // Set max height to be the entire height of the window, minus top/bottom buffer
 maxH = windowH - nav_container.bottom - bufferH;
+maxH = maxH * 0.85;
 
 var num_per_page = Math.round((maxH - margin.top) / min_height);
 
@@ -87,6 +88,13 @@ function findMode(assay_type) {
 
   return mode;
 }
+
+// Create square rollover window, with dimensions 60% of the entire window
+var struct_fraction = 0.6;
+var struct_size = Math.max((width + margin.left + margin.right) * struct_fraction,
+  (height + margin.top + margin.bottom) * struct_fraction,
+  350);
+
 
 // --- Load data, populate table ---
 d3.csv('/static/demo_data.csv', function(error, assay_data) {
@@ -367,5 +375,105 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   //     return x(d.assay_val) + dot_size * 1.75;
   //   })
   //   .attr('y', y(0.5));
+  //
+
+  //   Structure rollover
+  var struct = d3.select("#dotplot-container")
+    .append('div')
+    .attr('id', 'structs')
+    // .attr("width", struct_size)
+    // .attr("height", struct_size)
+    .style('background', 'aliceblue')
+    .style('opacity', 0.35);
+
+  struct.append('h4')
+    .attr('id', 'rollover-name')
+
+  struct.append('img#structure')
+    .attr("width", '100%')
+    .attr("height", '100%')
+
+  struct.append('ul#rollover-avg');
+
+  struct.append('ul#rollover-indiv');
+
+  // Rollover behavior
+  d3.selectAll('text').on('mouseover', function() {
+    showStruct(this.textContent);
+  })
+
+  d3.selectAll('text').on('mouseout', function() {
+    hideStruct();
+  })
+
+  function showStruct(cmpd_name) {
+    // turn on structure
+
+    struct.style('opacity', 1);
+
+    // bind data to structure fields
+    var filtered = nested.filter(function(d) {
+      return d.value.name == cmpd_name;
+    });
+
+    // Name of compound
+    struct.selectAll('#rollover-name')
+      .data(filtered)
+      .text(function(d) {
+        return d.value.name;
+      });
+
+    // Hypothesis: have to rebind the data to every element, since the children were declared before the data were bound. Therefore data doesn't inherit.
+    // change structure URL
+    // if (filtered.value.pubchem_id){
+    struct.selectAll('#structure')
+      .data(filtered)
+      .attr("src", function(d) {
+        if (d.value.pubchem_id) {
+          return struct_url1 + d.value.pubchem_id + struct_url2;
+        }
+      })
+      .style('opacity', function(d) {
+        if (d.value.pubchem_id) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+
+
+    // Avg. value
+    struct.selectAll('#rollover-avg')
+      .data(filtered)
+      .attr('class', 'rollover-avg')
+      .html(function(d) {
+        return 'average ' + d.value.assay_type + '<sub>50</sub>: ' + d3.format(".1e")(d.value.avg);
+      })
+
+    // Individual. value
+    struct.selectAll('#rollover-indiv')
+      .data(filtered.filter(function(d) {
+        return d.value.num_cmpds > 1;
+      }))
+      .selectAll('li')
+      .data(function(d) {
+        return d.value.assay_vals;
+      })
+      .enter().append('li.rollover-indiv')
+      .text(function(d) {
+        return d3.format(".1e")(d)
+      })
+
+  }
+
+
+  function hideStruct() {
+    struct.style('opacity', 0);
+
+    struct.selectAll('#structure').exit().remove();
+
+    struct.selectAll('li').remove()
+  }
+
 
 }); // ---- END OF CSV IMPORT
