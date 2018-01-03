@@ -71,8 +71,7 @@ var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
 
 var yAxis = d3.axisLeft(y)
-  // .ticks(0)
-  .tickSize(-width)
+.tickSize(-width + 8);
 
 // --- Helper functions ---
 // Determing whether the assay measures IC50 or EC50 values.
@@ -266,9 +265,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
   // Set y-domain
-  // TODO: remove dupes in names
   y.domain(filtered_data.map(function(d) {
-    // return [...new Set(d.value.name)];
     return d.value.name;
   }));
 
@@ -365,13 +362,6 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   // -- AXES --
   dotplot.append("g")
     .attr("class", "axis axis--x")
-    .attr('id', function(d, i) {
-      if (i == 0) {
-        return 'show-axis';
-      } else {
-        return 'hide-axis';
-      };
-    })
     // .attr("transform", "translate(0," + height + ")") // puts at the bottom of the svg
     .attr("transform", "translate(0, -1)") // puts at the bottom of the svg
     .call(xAxis)
@@ -383,10 +373,21 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .classed("minor", true);
 
 
-  dotplot.append("g")
-    .attr("class", "axis axis--y")
-    .call(yAxis);
-  // .call(d3.axisLeft(y).ticks(2, 'f')) // display y-axis, for testing purposes
+  // dotplot.append("g")
+  //   .attr("class", "grid--y")
+  //   .call(yAxis.tickSize(-width))
+  //   .attr('transform', 'translate(10, 0)');
+
+    dotplot.append("g")
+      .attr("class", "axis axis--y")
+      .call(yAxis);
+
+    dotplot.selectAll('.tick')
+    .attr('stroke-dasharray', '6,6');
+
+// pad the gridlines
+    dotplot.selectAll('.axis--y line')
+    .attr('transform', 'translate(8, 0)');
 
   // -- DOTS --
   var dot_grp = dotplot.append("g#graph")
@@ -413,17 +414,8 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .attr('r', dot_size);
 
   // --- not avg. value ---
-
-  // console.log(dot_grp.data())
-
   var circles = dot_grp.selectAll(".assay-val") // start a nested selection
     .data(function(d, i) {
-      // console.log(d)
-      // var filtered = d.filter(function(e) {
-      //   return e.value.num_cmpds > 1;
-      // })
-      //
-
       if (d.value.num_cmpds > 1) {
         // only return values if there are more than one compound;
         return d.value.assay_vals;
@@ -440,24 +432,10 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     })
     .attr('r', dot_size * 0.75);
 
-  // // dot plots of values
-  // dots.append('text.val-annot')
-  //   .attr("dominant-baseline", "middle")
-  //   .text(function(d) {
-  //     return d3.format(".1e")(d.assay_val);
-  //   })
-  //   .attr('x', function(d) {
-  //     return x(d.assay_val) + dot_size * 1.75;
-  //   })
-  //   .attr('y', y(0.5));
-  //
-
   //   Structure rollover
   var struct = d3.select("#dotplot-container")
     .append('div')
     .attr('id', 'structs')
-    // .attr("width", struct_size)
-    // .attr("height", struct_size)
     .style('background', 'aliceblue')
     .style('opacity', 0);
 

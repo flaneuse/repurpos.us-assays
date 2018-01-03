@@ -127,9 +127,10 @@ li.page {
 .assay-val {
   stroke: #212529;
   stroke-width: 0.4;
-  fill: #868e96;
-  fill-opacity: 0.4;
-  stroke-opacity: 1;
+  fill: #c5c9ce;
+  /* fill: #868e96; */
+  /* fill-opacity: 0.4; */
+  /* stroke-opacity: 1; */
 }
 
 .val-annot {
@@ -138,10 +139,10 @@ li.page {
 }
 
 /* Axes */
-
 .axis--y text {
   font-size: 1.5em;
   opacity: 0.75;
+  margin-right: 100px;
 }
 
 .axis path {
@@ -150,12 +151,19 @@ li.page {
   stroke-width: 0.4px;
 }
 
-/* ticks */
+.axis--y path {
+  display: none;
+}
 
+/* ticks & grid lines */
 .axis line {
   stroke: #212529;
   fill: none;
   stroke-width: 0.6px;
+}
+
+.axis--y line {
+  stroke: #21252940;
 }
 
 .axis .minor line {
