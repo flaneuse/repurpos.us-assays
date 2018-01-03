@@ -9,7 +9,7 @@ var struct_url2 = '&width=500&height=500';
 var struct_url3 = 'https://pubchem.ncbi.nlm.nih.gov/image/fl.html?cid=60961' // within their viewer
 var dot_size = 5;
 
-var assay_id = 'A00215';
+var assay_id = d3.select('.assay-id').text();
 
 var current_page = 0;
 
@@ -18,7 +18,7 @@ min_height = 50; // number of pixels per drug in dot plot
 
 // --- Setup margins for svg object
 var margin = {
-  top: 50,
+  top: 55,
   right: 40,
   bottom: 15,
   left: 155
@@ -355,12 +355,12 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
   scalebar.append("text")
     .attr("class", "annotation-right annotation--x")
-    .attr("transform", "translate(" + width + ", -" + "15" + ")")
+    .attr("transform", "translate(" + width + ", -" + "20" + ")")
     .text("more potent")
 
   scalebar.append("text")
     .attr("class", "annotation-left annotation--x")
-    .attr("transform", "translate(" + 0 + ", -" + "15" + ")")
+    .attr("transform", "translate(" + 0 + ", -" + "20" + ")")
     .text("less potent")
 
   // -- AXES --

@@ -53,7 +53,7 @@ def make_assays(row_id = 0):
     # longer term-- embed as json?
     assay_df = {
         'title': df.at[row_id,'title'],
-        'id': df.at[row_id, 'id'],
+        'id': df.at[row_id, 'genedata_id'],
         'summary': df.at[row_id,'summary'],
         'overview': {
             'purpose': df.at[row_id, 'purpose'],
