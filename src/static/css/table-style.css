@@ -14,10 +14,35 @@ h3#data-title {
   margin-top: 0.5rem;
 }
 
+/* links */
+
+.y-link {
+  font-size: 1em;
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  fill: #212529b0;
+  dominant-baseline: mathematical;
+  text-anchor: end;
+}
+
+.cmpd-link {
+  fill: white;
+  stroke: none;
+  opacity: 0;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.active.pointer {
+  text-decoration: underline;
+}
+
 /* Rollover */
+
 .active {
   opacity: 1;
-  text-decoration: underline;
 }
 
 .inactive {
@@ -46,6 +71,7 @@ h3#data-title {
 }
 
 /* nav elements:  tab panes, pagination */
+
 .nav-pills {
   margin-top: -2rem;
   margin-bottom: 16px;
@@ -157,7 +183,7 @@ li.page {
 .axis--y text {
   font-size: 1.5em;
   fill: #212529b0;
-  margin-right: 100px;
+  display: none;
 }
 
 .axis path {
@@ -177,7 +203,6 @@ li.page {
   fill: none;
   stroke-width: 0.6px;
 }
-
 
 .axis .minor line {
   stroke-width: 0.25px;

@@ -21,7 +21,7 @@ var margin = {
   top: 50,
   right: 40,
   bottom: 15,
-  left: 150
+  left: 155
 }
 
 
@@ -277,37 +277,11 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   // function generateTable(current_page) {
 
 
-
   // (1) Compound name (TODO: clean up chemical names)
-  //   names = rows.append('td#names')
-  //
-  //
-  //   names
-  //     // .selectAll('#link')
-  //     // .data(function(d) {
-  //     //   return d.value;
-  //     // })
-  //     .append('a#link')
-  //     .attr('href', function(d) {
-  //       if (d.wikidata) {
-  //         return drug_url + d.wikidata;
-  //       } else {
-  //         return null;
-  //       }
-  //     })
-  //     .text(function(d) {
-  //       if (d.pubchem_label) {
-  //         return d.pubchem_label;
-  //       } else {
-  //         return d.calibr_id;
-  //       }
-  //     })
-  // // }
-  //
+
   // generateTable(0);
 
-  // (3) -- DRAW PLOTS --
-  // Bind SVG object to each td
+  // -- DRAW PLOTS --
   d3.select("#dotplot-container")
     .append('svg')
     .attr("width", width + margin.left + margin.right)
@@ -318,6 +292,32 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   dotplot = d3.selectAll('#dotplot');
 
   svg = d3.selectAll('svg')
+
+
+  // --- HYPERLINK to repurpos.us page for each compound ---
+  dotplot.append('g#rect-links')
+    .selectAll('.cmpd-link')
+    .data(filtered_data)
+    .enter().append('a.cmpd-link')
+    .attr("xlink:href", function(d) {
+      if (d.value.wikidata) {
+        return drug_url + d.value.wikidata;
+      } else {
+        return null;
+      }
+    })
+    .append('rect')
+    .classed('pointer', function(d) {
+      if (d.value.wikidata) {
+        return true;
+      }
+    })
+    .attr('width', width + margin.right)
+    .attr('height', y.bandwidth())
+    .attr('x', 0)
+    .attr('y', function(d, i) {
+      return i * y.step()
+    });
 
   // -- SCALEBAR --
   var scalebar = dotplot.append("g#scalebar");
@@ -333,7 +333,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .attr("y2", "0%");
 
 
-  //Append multiple color stops by using D3's data/enter step
+  // Append multiple color stops by using D3's data/enter step
   colorRange = d3.schemeGnBu[9];
   // colorRange = colorScale.range();
   linearGradient.selectAll("stop")
@@ -346,7 +346,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       return d;
     });
 
-  //Draw the rectangle and fill with gradient
+  // Draw the rectangle and fill with gradient
   scalebar.append("rect#scalebar")
     .attr("width", width)
     .attr("height", 10)
@@ -379,6 +379,34 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   dotplot.append("g")
     .attr("class", "axis axis--y")
     .call(yAxis);
+
+  // --- REDRAW Y-AXIS to link to repurpos.us page for each compound ---
+  dotplot.append('g#y-links')
+    .attr('transform', 'translate(-6, 0)')
+    .selectAll('.y-link')
+    .data(filtered_data)
+    .enter().append('a.y-link')
+
+    .attr("xlink:href", function(d) {
+      if (d.value.wikidata) {
+        return drug_url + d.value.wikidata;
+      } else {
+        return null;
+      }
+    })
+    .append('text')
+    .classed('pointer', function(d) {
+      if (d.value.wikidata) {
+        return true;
+      }
+    })
+    .text(function(d) {
+      return d.value.name;
+    })
+    .attr('x', 0)
+    .attr('y', function(d, i) {
+      return i * y.step() + y.step() / 2;
+    });
 
   // // dash the ticks
   //   dotplot.selectAll('.tick')
@@ -468,14 +496,16 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
   struct.append('ul#rollover-indiv');
 
+
   // Rollover behavior
-  d3.selectAll('.axis--y text').on('mouseover', function() {
+  dotplot.selectAll('.y-link text').on('mouseover', function() {
+    console.log(this)
 
     var selected = "#_" + this.textContent;
     selected = selected.replace(/ /g, "").replace(/-/g, "");
 
     // dim the rest of the axis
-    svg.selectAll(".axis--y text")
+    svg.selectAll(".y-link text")
       .classed("inactive", true);
 
     d3.select(this)
@@ -496,9 +526,9 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   })
 
   // --- MOUSEOUT ---
-  d3.selectAll('.axis--y text').on('mouseout', function() {
+  dotplot.selectAll('.y-link text').on('mouseout', function() {
     // turn the axis back on
-    svg.selectAll(".axis--y text")
+    svg.selectAll(".y-link text")
       .classed("active", false)
       .classed("inactive", false);
 
