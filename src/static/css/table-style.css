@@ -10,11 +10,12 @@ h3#data-title {
   margin-bottom: 0;
 }
 
-#protocol h3{
+#protocol h3 {
   margin-top: 0.5rem;
 }
 
 /* Rollover */
+
 .rollover-avg {
   color: blue;
   font-size: 1.2em;
@@ -37,8 +38,10 @@ h3#data-title {
 }
 
 /* nav elements:  tab panes, pagination */
+
 .nav-pills {
   margin-top: -2rem;
+  margin-bottom: 8px;
 }
 
 .nav-pills .nav-link {
@@ -63,7 +66,7 @@ h3#data-title {
   /* background-color: #21252920; */
   background-color: #3d6de025;
   color: #3d6de0;
-    border-color: #3d6de025;
+  border-color: #3d6de025;
 }
 
 .nav-link {
@@ -139,6 +142,7 @@ li.page {
 }
 
 /* Axes */
+
 .axis--y text {
   font-size: 1.5em;
   opacity: 0.75;
@@ -156,6 +160,7 @@ li.page {
 }
 
 /* ticks & grid lines */
+
 .axis line {
   stroke: #212529;
   fill: none;
@@ -171,22 +176,15 @@ li.page {
   opacity: 0.4;
 }
 
-#show-axis {
-  opacity: 1;
-}
-
-#hide-axis {
-  opacity: 0;
-}
-
-
 /* annotations */
+
 .annotation--x {
   font-weight: 400;
   font-size: 1.5em;
   opacity: 0.2;
   text-transform: uppercase;
 }
+
 .annotation-right {
   text-anchor: end;
 }

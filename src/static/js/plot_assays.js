@@ -61,17 +61,17 @@ var y = d3.scaleBand()
 // colorScale requires a sequential scale + associated interpolator. Unfortunately, that means the log-transform of the color needs to be manually specified.
 var colorScale = d3
   .scaleSequential(d3.interpolateGnBu);
-  // The other option is to use a logScale; however, to specify the interpolation goes between more than 2 colors,the domain also needs to contain that number of elements.
-  // TODO: maybe convert back to a simpler scaleLog?
-  // .scaleLinear()
-  // .range(["#2c7bb6", "#00a6ca", "#00ccbc", "#90eb9d", "#ffff8c", "#f9d057", "#f29e2e", "#e76818", "#d7191c"])
-  // .interpolate(d3.interpolateHcl);
+// The other option is to use a logScale; however, to specify the interpolation goes between more than 2 colors,the domain also needs to contain that number of elements.
+// TODO: maybe convert back to a simpler scaleLog?
+// .scaleLinear()
+// .range(["#2c7bb6", "#00a6ca", "#00ccbc", "#90eb9d", "#ffff8c", "#f9d057", "#f29e2e", "#e76818", "#d7191c"])
+// .interpolate(d3.interpolateHcl);
 
 var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
 
 var yAxis = d3.axisLeft(y)
-.tickSize(-width + 8);
+  .tickSize(-width + 8);
 
 // --- Helper functions ---
 // Determing whether the assay measures IC50 or EC50 values.
@@ -343,7 +343,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     });
 
   //Draw the rectangle and fill with gradient
-  scalebar.append("rect")
+  scalebar.append("rect#scalebar")
     .attr("width", width)
     .attr("height", 10)
     .attr("transform", "translate(0, -" + margin.top + ")")
@@ -378,15 +378,15 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   //   .call(yAxis.tickSize(-width))
   //   .attr('transform', 'translate(10, 0)');
 
-    dotplot.append("g")
-      .attr("class", "axis axis--y")
-      .call(yAxis);
+  dotplot.append("g")
+    .attr("class", "axis axis--y")
+    .call(yAxis);
 
-    dotplot.selectAll('.tick')
+  dotplot.selectAll('.tick')
     .attr('stroke-dasharray', '6,6');
 
-// pad the gridlines
-    dotplot.selectAll('.axis--y line')
+  // pad the gridlines
+  dotplot.selectAll('.axis--y line')
     .attr('transform', 'translate(8, 0)');
 
   // -- DOTS --
