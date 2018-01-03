@@ -136,9 +136,13 @@ li.page {
   /* stroke-opacity: 1; */
 }
 
-.val-annot {
+/* .val-annot {
   font-size: 0.7em;
   opacity: 0.4;
+} */
+
+.lollipop {
+  stroke: #21252940;
 }
 
 /* Axes */
@@ -155,7 +159,7 @@ li.page {
   stroke-width: 0.4px;
 }
 
-.axis--y path {
+.axis--y path, .axis--y line {
   display: none;
 }
 
@@ -167,9 +171,6 @@ li.page {
   stroke-width: 0.6px;
 }
 
-.axis--y line {
-  stroke: #21252940;
-}
 
 .axis .minor line {
   stroke-width: 0.25px;

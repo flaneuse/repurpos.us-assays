@@ -71,7 +71,8 @@ var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
 
 var yAxis = d3.axisLeft(y)
-  .tickSize(-width + 8);
+  .ticks(0);
+// .tickSize(-width + 8);
 
 // --- Helper functions ---
 // Determing whether the assay measures IC50 or EC50 values.
@@ -135,6 +136,9 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       return {
         num_cmpds: v.length,
         avg: d3.mean(v, function(d) {
+          return d.assay_val;
+        }),
+        min: d3.min(v, function(d) {
           return d.assay_val;
         }),
         assay_vals: v.map(function(d) {
@@ -372,22 +376,17 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .exit()
     .classed("minor", true);
 
-
-  // dotplot.append("g")
-  //   .attr("class", "grid--y")
-  //   .call(yAxis.tickSize(-width))
-  //   .attr('transform', 'translate(10, 0)');
-
   dotplot.append("g")
     .attr("class", "axis axis--y")
     .call(yAxis);
 
-  dotplot.selectAll('.tick')
-    .attr('stroke-dasharray', '6,6');
-
-  // pad the gridlines
-  dotplot.selectAll('.axis--y line')
-    .attr('transform', 'translate(8, 0)');
+  // // dash the ticks
+  //   dotplot.selectAll('.tick')
+  //     .attr('stroke-dasharray', '6,6');
+  //
+  // // pad the gridlines
+  // dotplot.selectAll('.axis--y line')
+  //   .attr('transform', 'translate(8, 0)');
 
   // -- DOTS --
   var dot_grp = dotplot.append("g#graph")
@@ -397,6 +396,21 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .attr("id", function(d) {
       return d.value.name;
     });
+
+
+  // --- lollipops: extend to largest value ---
+  var circles = dot_grp.append("line.lollipop")
+    .attr('x2', function(d) {
+      return x(d.value.min);
+    })
+    .attr('x1', 8) // padded against the end of the x-axis
+    .attr('y1', function(d) {
+      return y(d.value.name) + y.bandwidth() / 2;;
+    })
+    .attr('y2', function(d) {
+      return y(d.value.name) + y.bandwidth() / 2;;
+    })
+    .attr('stroke-dasharray', '6,6');
 
 
   // -- avg. value --
