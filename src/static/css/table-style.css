@@ -15,6 +15,14 @@ h3#data-title {
 }
 
 /* Rollover */
+.active {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.inactive {
+  opacity: 0.25;
+}
 
 .rollover-avg {
   color: blue;
@@ -38,10 +46,9 @@ h3#data-title {
 }
 
 /* nav elements:  tab panes, pagination */
-
 .nav-pills {
   margin-top: -2rem;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .nav-pills .nav-link {
@@ -149,7 +156,7 @@ li.page {
 
 .axis--y text {
   font-size: 1.5em;
-  opacity: 0.75;
+  fill: #212529b0;
   margin-right: 100px;
 }
 

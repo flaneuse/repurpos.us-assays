@@ -394,6 +394,10 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .data(filtered_data)
     .enter().append("g.dots")
     .attr("id", function(d) {
+      // alter the id so it follows CSS selection rules: no spaces, no -, can't start w/ number.
+      return "_" + d.value.name.replace(/ /g, "").replace(/-/g, "");
+    })
+    .attr("name", function(d) { // used to link to the y-axis for compounds w/ multiple measurements
       return d.value.name;
     });
 
@@ -441,8 +445,8 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .attr('cx', function(d, i) {
       return x(d);
     })
-    .attr('cy', function(d) {
-      return y(this.parentNode.id) + y.bandwidth() / 2;;
+    .attr('cy', function(d, i) {
+      return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
     })
     .attr('r', dot_size * 0.75);
 
@@ -465,17 +469,49 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   struct.append('ul#rollover-indiv');
 
   // Rollover behavior
-  d3.selectAll('text').on('mouseover', function() {
+  d3.selectAll('.axis--y text').on('mouseover', function() {
+
+    var selected = "#_" + this.textContent;
+    selected = selected.replace(/ /g, "").replace(/-/g, "");
+
+    // dim the rest of the axis
+    svg.selectAll(".axis--y text")
+      .classed("inactive", true);
+
+    d3.select(this)
+      .classed("inactive", false)
+      .classed("active", true);
+
+    // turn off lollipop sticks, circles
+    svg.selectAll(".dots")
+      .classed("inactive", true);
+
+
+    // turn on selected
+    svg.selectAll(selected)
+      .classed("inactive", false);
+
+    // turn on structures
     showStruct(this.textContent);
   })
 
-  d3.selectAll('text').on('mouseout', function() {
+  // --- MOUSEOUT ---
+  d3.selectAll('.axis--y text').on('mouseout', function() {
+    // turn the axis back on
+    svg.selectAll(".axis--y text")
+      .classed("active", false)
+      .classed("inactive", false);
+
+    // turn on lollipop sticks, circles
+    svg.selectAll(".dots")
+      .classed("inactive", false);
+
+
     hideStruct();
   })
 
   function showStruct(cmpd_name) {
     // turn on structure
-
     struct.style('opacity', 1);
 
     // bind data to structure fields
