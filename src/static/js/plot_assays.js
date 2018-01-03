@@ -58,9 +58,14 @@ var y = d3.scaleBand()
   .paddingInner(0.05)
   .paddingOuter(0.1);
 
-var colorScale = d3.scaleLinear()
-  .range(["#2c7bb6", "#00a6ca", "#00ccbc", "#90eb9d", "#ffff8c", "#f9d057", "#f29e2e", "#e76818", "#d7191c"]);
-// d3.scaleSequential(d3.interpolateViridis)
+// colorScale requires a sequential scale + associated interpolator. Unfortunately, that means the log-transform of the color needs to be manually specified.
+var colorScale = d3
+  .scaleSequential(d3.interpolateGnBu);
+  // The other option is to use a logScale; however, to specify the interpolation goes between more than 2 colors,the domain also needs to contain that number of elements.
+  // TODO: maybe convert back to a simpler scaleLog?
+  // .scaleLinear()
+  // .range(["#2c7bb6", "#00a6ca", "#00ccbc", "#90eb9d", "#ffff8c", "#f9d057", "#f29e2e", "#e76818", "#d7191c"])
+  // .interpolate(d3.interpolateHcl);
 
 var xAxis = d3.axisTop(x)
   .ticks(6, '.0e')
@@ -225,20 +230,32 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   // -- BIND DATA TO AXES --
   // `return d.assay_val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
   // NOTE: Calculate x-domain based on the limits of the *entire* data series, not the filtered data.
-  x.domain([d3.max(nested, function(d) {
-      return d3.max(d.value.assay_vals);
-    }),
-    d3.min(nested, function(d) {
-      return d3.min(d.value.assay_vals)
-    })
-  ]);
 
-  colorScale.domain([d3.max(nested, function(d) {
-      return Math.log10(d3.max(d.value.assay_vals));
-    }),
-    d3.min(nested, function(d) {
-      return Math.log10(d3.min(d.value.assay_vals))
-    })
+  var maxVal = d3.max(nested, function(d) {
+    return d3.max(d.value.assay_vals);
+  });
+
+  var minVal = d3.min(nested, function(d) {
+    return d3.min(d.value.assay_vals)
+  });
+
+  x.domain([maxVal, minVal]);
+
+  // Code if using d3.scaleLog
+  // var numColors = colorScale.range().length;
+  //
+  // colorScale.domain(d3.range(Math.log10(maxVal),
+  //   Math.log10(minVal),
+  //   (Math.log10(maxVal) - Math.log10(minVal)) / numColors
+  // ));
+
+  // Code if using d3.scaleSequential
+  colorScale.domain([Math.log10(d3.max(nested, function(d) {
+      return d3.max(d.value.assay_vals);
+    })),
+    Math.log10(d3.min(nested, function(d) {
+      return d3.min(d.value.assay_vals);
+    }))
   ]);
 
 
@@ -316,11 +333,13 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
   //Append multiple color stops by using D3's data/enter step
+  colorRange = d3.schemeGnBu[9];
+  // colorRange = colorScale.range();
   linearGradient.selectAll("stop")
-    .data(colorScale.range())
+    .data(colorRange)
     .enter().append("stop")
     .attr("offset", function(d, i) {
-      return i / (colorScale.range().length - 1);
+      return i / (colorRange.length - 1);
     })
     .attr("stop-color", function(d) {
       return d;
