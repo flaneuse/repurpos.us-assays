@@ -26,9 +26,9 @@ h3#data-title {
 }
 
 .cmpd-link {
-  fill: red;
+  fill: white;
   stroke: none;
-  opacity: 0.2;
+  opacity: 0;
 }
 
 .pointer {
@@ -47,6 +47,14 @@ h3#data-title {
 
 .inactive {
   opacity: 0.25;
+}
+
+.cmpd-link.active {
+  opacity: 0;
+}
+
+.cmpd-link.inactive {
+  opacity: 0.8;
 }
 
 .rollover-avg {
@@ -84,11 +92,13 @@ h3#data-title {
   border: 0px #2125290d solid;
   border-bottom-width: 4px;
   color: #21252935;
+  -webkit-text-fill-color: #21252935;
 }
 
 .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
   background-color: #21252920;
   border-color: #21252920;
+  -webkit-text-fill-color: #21252980;
   color: #21252980;
   /* background-color: #3d6de025;
   border-color: #3d6de025;

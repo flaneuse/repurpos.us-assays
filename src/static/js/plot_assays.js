@@ -72,7 +72,6 @@ var xAxis = d3.axisTop(x)
 
 var yAxis = d3.axisLeft(y)
   .ticks(0);
-// .tickSize(-width + 8);
 
 // --- Helper functions ---
 // Determing whether the assay measures IC50 or EC50 values.
@@ -98,6 +97,10 @@ function findMode(assay_type) {
   return mode;
 }
 
+function remove_symbols(d) {
+  return "_" + d.replace(/ /g, "").replace(/-/g, "");
+}
+
 // Create square rollover window, with dimensions 60% of the entire window
 var struct_fraction = 0.6;
 var struct_size = Math.max((width + margin.left + margin.right) * struct_fraction,
@@ -114,7 +117,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   // // filter values if NA (don't display)
   assay_data = assay_data
     .filter(function(d, i) {
-      return d.genedata_id != assay_id && d.ac50;
+      return d.genedata_id == assay_id && d.ac50;
     })
 
   // convert numbers to numbers
@@ -206,8 +209,8 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     .text(function(d, i) {
       return i + 1;
     })
-    .classed('page-selected', function(d) {
-      return d
+    .classed('page-selected', function(d, i) {
+      return i == current_page
     })
 
   function updatePage(idx) {
@@ -218,6 +221,46 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       })
 
     generateTable(idx)
+  }
+
+  // -- PILLS -- : display IC50/EC50 tabs if warranted
+  // var assay_types = [... new Set(nested.map(function(d) { return d.value.assay_type}))];
+  var assay_types = nested.map(function(d) {
+    return d.value.assay_type
+  });
+  // count number of occurrences of each assay type.
+  // assay_types = d3.nest()
+  // .key(function(d) {return d})
+  // .rollup(function(d) { return d.length;})
+  // .entries(assay_types);
+
+  var current_tab;
+  var tabs = d3.select('#tabs');
+
+  if (assay_types.includes('IC')) {
+    current_tab = 'IC';
+
+    tabs.append('li.nav-item')
+      .append('a.nav-link active')
+      .attr('id', 'IC')
+      .attr('data-toggle', 'tab')
+      // .attr('href', '#ic50')
+      .attr('role', 'tab')
+      .html('IC<sub>50</sub>');
+  }
+
+  if (assay_types.includes('EC')) {
+    if (!current_tab) {
+      current_tab = 'EC';
+    }
+
+    tabs.append('li.nav-item')
+      .append('a.nav-link')
+      .attr('id', 'EC')
+      .attr('data-toggle', 'tab')
+      // .attr('href', '#ec50')
+      .attr('role', 'tab')
+      .html('EC<sub>50</sub>');
   }
 
   // EVENT: on clicking breadcrumb, change the page. -----------------------------
@@ -261,284 +304,314 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     }))
   ]);
 
-
-  // Filter data to be only those compounds that exist on the current page.
-  var filtered_data = nested.filter(function(d) {
-    return d.page_num == current_page
-  });
-
-
-  // Set y-domain
-  y.domain(filtered_data.map(function(d) {
-    return d.value.name;
-  }));
-
-
-  // function generateTable(current_page) {
-
-
-  // (1) Compound name (TODO: clean up chemical names)
-
-  // generateTable(0);
-
-  // -- DRAW PLOTS --
-  d3.select("#dotplot-container")
-    .append('svg')
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g#dotplot")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  dotplot = d3.selectAll('#dotplot');
-
-  svg = d3.selectAll('svg')
-
-
-  // --- HYPERLINK to repurpos.us page for each compound ---
-  dotplot.append('g#rect-links')
-    .selectAll('.cmpd-link')
-    .data(filtered_data)
-    .enter().append('a.cmpd-link')
-    .attr("xlink:href", function(d) {
-      if (d.value.wikidata) {
-        return drug_url + d.value.wikidata;
-      } else {
-        return null;
-      }
-    })
-    .append('rect')
-    .classed('pointer', function(d) {
-      if (d.value.wikidata) {
-        return true;
-      }
-    })
-    .attr('width', width + margin.right)
-    .attr('height', y.bandwidth())
-    .attr('x', 0)
-    .attr('y', function(d, i) {
-      return i * y.step()
+  function draw_plot(current_page, current_tab) {
+    // Filter data to be only those compounds that exist on the current page and current tab
+    var data_currpage = nested.filter(function(d) {
+      return d.page_num == current_page && d.value.assay_type == current_tab;
     });
 
-  // -- SCALEBAR --
-  var scalebar = dotplot.append("g#scalebar");
 
-  // scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
-  var defs = svg.append('defs');
-  var linearGradient = defs.append('linearGradient')
-    .attr('id', 'linear-gradient')
-    // horizontal gradient
-    .attr("x1", "0%")
-    .attr("y1", "0%")
-    .attr("x2", "100%")
-    .attr("y2", "0%");
-
-
-  // Append multiple color stops by using D3's data/enter step
-  colorRange = d3.schemeGnBu[9];
-  // colorRange = colorScale.range();
-  linearGradient.selectAll("stop")
-    .data(colorRange)
-    .enter().append("stop")
-    .attr("offset", function(d, i) {
-      return i / (colorRange.length - 1);
-    })
-    .attr("stop-color", function(d) {
-      return d;
-    });
-
-  // Draw the rectangle and fill with gradient
-  scalebar.append("rect#scalebar")
-    .attr("width", width)
-    .attr("height", 10)
-    .attr("transform", "translate(0, -" + margin.top + ")")
-    .style("fill", "url(#linear-gradient)");
-
-  scalebar.append("text")
-    .attr("class", "annotation-right annotation--x")
-    .attr("transform", "translate(" + width + ", -" + "20" + ")")
-    .text("more potent")
-
-  scalebar.append("text")
-    .attr("class", "annotation-left annotation--x")
-    .attr("transform", "translate(" + 0 + ", -" + "20" + ")")
-    .text("less potent")
-
-  // -- AXES --
-  dotplot.append("g")
-    .attr("class", "axis axis--x")
-    // .attr("transform", "translate(0," + height + ")") // puts at the bottom of the svg
-    .attr("transform", "translate(0, -1)") // puts at the bottom of the svg
-    .call(xAxis)
-    .selectAll(".tick")
-    .data(x.ticks(3), function(d) {
-      return d;
-    }) // create a secondary set of ticks for minor scale; pulled from http://blockbuilder.org/mbostock/4349486
-    .exit()
-    .classed("minor", true);
-
-  dotplot.append("g")
-    .attr("class", "axis axis--y")
-    .call(yAxis);
-
-  // --- REDRAW Y-AXIS to link to repurpos.us page for each compound ---
-  dotplot.append('g#y-links')
-    .attr('transform', 'translate(-6, 0)')
-    .selectAll('.y-link')
-    .data(filtered_data)
-    .enter().append('a.y-link')
-
-    .attr("xlink:href", function(d) {
-      if (d.value.wikidata) {
-        return drug_url + d.value.wikidata;
-      } else {
-        return null;
-      }
-    })
-    .append('text')
-    .classed('pointer', function(d) {
-      if (d.value.wikidata) {
-        return true;
-      }
-    })
-    .text(function(d) {
+    // Set y-domain
+    y.domain(data_currpage.map(function(d) {
       return d.value.name;
-    })
-    .attr('x', 0)
-    .attr('y', function(d, i) {
-      return i * y.step() + y.step() / 2;
-    });
+    }));
 
-  // // dash the ticks
-  //   dotplot.selectAll('.tick')
-  //     .attr('stroke-dasharray', '6,6');
-  //
-  // // pad the gridlines
-  // dotplot.selectAll('.axis--y line')
-  //   .attr('transform', 'translate(8, 0)');
-
-  // -- DOTS --
-  var dot_grp = dotplot.append("g#graph")
-    .selectAll(".avg")
-    .data(filtered_data)
-    .enter().append("g.dots")
-    .attr("id", function(d) {
-      // alter the id so it follows CSS selection rules: no spaces, no -, can't start w/ number.
-      return "_" + d.value.name.replace(/ /g, "").replace(/-/g, "");
-    })
-    .attr("name", function(d) { // used to link to the y-axis for compounds w/ multiple measurements
-      return d.value.name;
-    });
+    // function generateTable(current_page) {
 
 
-  // --- lollipops: extend to largest value ---
-  var circles = dot_grp.append("line.lollipop")
-    .attr('x2', function(d) {
-      return x(d.value.min);
-    })
-    .attr('x1', 8) // padded against the end of the x-axis
-    .attr('y1', function(d) {
-      return y(d.value.name) + y.bandwidth() / 2;;
-    })
-    .attr('y2', function(d) {
-      return y(d.value.name) + y.bandwidth() / 2;;
-    })
-    .attr('stroke-dasharray', '6,6');
+    // (1) Compound name (TODO: clean up chemical names)
+
+    // generateTable(0);
+
+    // -- DRAW PLOTS --
+    d3.select("#dotplot-container")
+      .append('svg')
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g#dotplot")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    dotplot = d3.selectAll('#dotplot');
+
+    svg = d3.selectAll('svg')
 
 
-  // -- avg. value --
-  dot_grp.append("circle.assay-avg")
-    // .at('cx', compose(x, ƒ('value.avg')))
-    .attr('cx', function(d) {
-      return x(d.value.avg)
-    })
-    .attr('cy', function(d) {
-      return y(d.value.name) + y.bandwidth() / 2;
-    })
-    .style('fill', function(d) {
-      return colorScale(Math.log10(d.value.avg));
-    })
-    .attr('r', dot_size);
 
-  // --- not avg. value ---
-  var circles = dot_grp.selectAll(".assay-val") // start a nested selection
-    .data(function(d, i) {
-      if (d.value.num_cmpds > 1) {
-        // only return values if there are more than one compound;
-        return d.value.assay_vals;
-      } else {
-        return '';
-      }
-    })
-    .enter().append("circle.assay-val")
-    .attr('cx', function(d, i) {
-      return x(d);
-    })
-    .attr('cy', function(d, i) {
-      return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
-    })
-    .attr('r', dot_size * 0.75);
+    // -- SCALEBAR --
+    var scalebar = dotplot.append("g#scalebar");
 
-  //   Structure rollover
-  var struct = d3.select("#dotplot-container")
-    .append('div')
-    .attr('id', 'structs')
-    .style('background', 'aliceblue')
-    .style('opacity', 0);
-
-  struct.append('h4')
-    .attr('id', 'rollover-name')
-
-  struct.append('img#structure')
-    .attr("width", '100%')
-    .attr("height", '100%')
-
-  struct.append('ul#rollover-avg');
-
-  struct.append('ul#rollover-indiv');
+    // scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
+    var defs = svg.append('defs');
+    var linearGradient = defs.append('linearGradient')
+      .attr('id', 'linear-gradient')
+      // horizontal gradient
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "0%");
 
 
+    // Append multiple color stops by using D3's data/enter step
+    colorRange = d3.schemeGnBu[9];
+    // colorRange = colorScale.range();
+    linearGradient.selectAll("stop")
+      .data(colorRange)
+      .enter().append("stop")
+      .attr("offset", function(d, i) {
+        return i / (colorRange.length - 1);
+      })
+      .attr("stop-color", function(d) {
+        return d;
+      });
+
+    // Draw the rectangle and fill with gradient
+    scalebar.append("rect#scalebar")
+      .attr("width", width)
+      .attr("height", 10)
+      .attr("transform", "translate(0, -" + margin.top + ")")
+      .style("fill", "url(#linear-gradient)");
+
+    scalebar.append("text")
+      .attr("class", "annotation-right annotation--x")
+      .attr("transform", "translate(" + width + ", -" + "20" + ")")
+      .text("more potent")
+
+    scalebar.append("text")
+      .attr("class", "annotation-left annotation--x")
+      .attr("transform", "translate(" + 0 + ", -" + "20" + ")")
+      .text("less potent")
+
+    // -- AXES --
+    dotplot.append("g")
+      .attr("class", "axis axis--x")
+      // .attr("transform", "translate(0," + height + ")") // puts at the bottom of the svg
+      .attr("transform", "translate(0, -1)") // puts at the bottom of the svg
+      .call(xAxis)
+      .selectAll(".tick")
+      .data(x.ticks(3), function(d) {
+        return d;
+      }) // create a secondary set of ticks for minor scale; pulled from http://blockbuilder.org/mbostock/4349486
+      .exit()
+      .classed("minor", true);
+
+    dotplot.append("g")
+      .attr("class", "axis axis--y")
+      .call(yAxis);
+
+    // --- REDRAW Y-AXIS to link to repurpos.us page for each compound ---
+    dotplot.append('g#y-links')
+      .attr('transform', 'translate(-6, 0)')
+      .selectAll('.y-link')
+      .data(data_currpage)
+      .enter().append('a.y-link')
+
+      .attr("xlink:href", function(d) {
+        if (d.value.wikidata) {
+          return drug_url + d.value.wikidata;
+        } else {
+          return null;
+        }
+      })
+      .append('text')
+      .classed('pointer', function(d) {
+        if (d.value.wikidata) {
+          return true;
+        }
+      })
+      .text(function(d) {
+        return d.value.name;
+      })
+      .attr('x', 0)
+      .attr('y', function(d, i) {
+        return i * y.step() + y.step() / 2;
+      });
+
+    // -- DOTS --
+    var dot_grp = dotplot.append("g#graph")
+      .selectAll(".avg")
+      .data(data_currpage)
+      .enter().append("g.dots")
+      .attr("id", function(d) {
+        // alter the id so it follows CSS selection rules: no spaces, no -, can't start w/ number.
+        return remove_symbols(d.value.name);
+      })
+      .attr("name", function(d) { // used to link to the y-axis for compounds w/ multiple measurements
+        return d.value.name;
+      });
+
+
+    // --- lollipops: extend to largest value ---
+    var circles = dot_grp.append("line.lollipop")
+      .attr('x2', function(d) {
+        return x(d.value.min);
+      })
+      .attr('x1', 8) // padded against the end of the x-axis
+      .attr('y1', function(d) {
+        return y(d.value.name) + y.bandwidth() / 2;;
+      })
+      .attr('y2', function(d) {
+        return y(d.value.name) + y.bandwidth() / 2;;
+      })
+      .attr('stroke-dasharray', '6,6');
+
+
+    // -- avg. value --
+    dot_grp.append("circle.assay-avg")
+      // .at('cx', compose(x, ƒ('value.avg')))
+      .attr('cx', function(d) {
+        return x(d.value.avg)
+      })
+      .attr('cy', function(d) {
+        return y(d.value.name) + y.bandwidth() / 2;
+      })
+      .style('fill', function(d) {
+        return colorScale(Math.log10(d.value.avg));
+      })
+      .attr('r', dot_size);
+
+    // --- not avg. value ---
+    var circles = dot_grp.selectAll(".assay-val") // start a nested selection
+      .data(function(d, i) {
+        if (d.value.num_cmpds > 1) {
+          // only return values if there are more than one compound;
+          return d.value.assay_vals;
+        } else {
+          return '';
+        }
+      })
+      .enter().append("circle.assay-val")
+      .attr('cx', function(d, i) {
+        return x(d);
+      })
+      .attr('cy', function(d, i) {
+        return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
+      })
+      .attr('r', dot_size * 0.75);
+
+
+    // --- HYPERLINK to repurpos.us page for each compound ---
+    dotplot.append('g#rect-links')
+      .selectAll('.cmpd-link')
+      .data(data_currpage)
+      .enter().append('a.cmpd-link')
+      .attr('id', function(d) {
+        return (d.value.name);
+      })
+      .attr("xlink:href", function(d) {
+        if (d.value.wikidata) {
+          return drug_url + d.value.wikidata;
+        } else {
+          return null;
+        }
+      })
+      .append('rect')
+      .classed('pointer', function(d) {
+        if (d.value.wikidata) {
+          return true;
+        }
+      })
+      .attr('width', function(d) {
+        return x(d.value.min) + margin.right / 2;
+      })
+      .attr('height', y.bandwidth())
+      .attr('x', 0)
+      .attr('y', function(d, i) {
+        return i * y.step()
+      });
+
+    //   -- structures (empty container) --
+    var struct = d3.select("#dotplot-container")
+      .append('div')
+      .attr('id', 'structs')
+      .style('background', 'aliceblue')
+      .style('opacity', 0);
+
+    struct.append('h4')
+      .attr('id', 'rollover-name')
+
+    struct.append('img#structure')
+      .attr("width", '100%')
+      .attr("height", '100%')
+
+    struct.append('ul#rollover-avg');
+
+    struct.append('ul#rollover-indiv');
+  } // END OF PLOT FUNCTION
+
+  // DRAW THE INITIAL PLOT
+  draw_plot(current_page, current_tab)
+
+  // MOUSEOVER
   // Rollover behavior
   dotplot.selectAll('.y-link text').on('mouseover', function() {
-    console.log(this)
 
-    var selected = "#_" + this.textContent;
-    selected = selected.replace(/ /g, "").replace(/-/g, "");
+      var selected = "#" + remove_symbols(this.textContent);
 
-    // dim the rest of the axis
-    svg.selectAll(".y-link text")
-      .classed("inactive", true);
+      // dim the rest of the axis
+      svg.selectAll(".y-link text")
+        .classed("inactive", true);
 
-    d3.select(this)
-      .classed("inactive", false)
-      .classed("active", true);
+      d3.select(this)
+        .classed("inactive", false)
+        .classed("active", true);
 
-    // turn off lollipop sticks, circles
-    svg.selectAll(".dots")
-      .classed("inactive", true);
+      // turn off lollipop sticks, circles
+      svg.selectAll(".dots")
+        .classed("inactive", true);
 
 
-    // turn on selected
-    svg.selectAll(selected)
-      .classed("inactive", false);
+      // turn on selected
+      svg.selectAll(selected)
+        .classed("inactive", false);
 
-    // turn on structures
-    showStruct(this.textContent);
-  })
+      // turn on structures
+      showStruct(this.textContent);
+    })
+    .on('mouseout', function() {
+      // turn the axis back on
+      svg.selectAll(".y-link text")
+        .classed("active", false)
+        .classed("inactive", false);
+
+      // turn on lollipop sticks, circles
+      svg.selectAll(".dots")
+        .classed("inactive", false);
+
+
+      hideStruct();
+    })
+
+  // mouseover: rects
+  dotplot.selectAll('.cmpd-link')
+    .on('mouseover', function() {
+      selected = this.id;
+
+      dotplot.selectAll(".cmpd-link")
+        .classed("inactive", true);
+
+      d3.select(this)
+        .classed("inactive", false)
+        .classed("active", true);
+
+      // y-axis text
+      dotplot.selectAll('.y-link text')
+        .attr('class', function(d) {
+          if (d.value.name != selected) {
+            return 'inactive';
+          }
+        })
+    })
+    .on('mouseout', function() {
+      dotplot.selectAll(".cmpd-link")
+        .classed("inactive", false);
+
+      dotplot.selectAll(".y-link text")
+        .classed("inactive", false);
+
+    })
 
   // --- MOUSEOUT ---
-  dotplot.selectAll('.y-link text').on('mouseout', function() {
-    // turn the axis back on
-    svg.selectAll(".y-link text")
-      .classed("active", false)
-      .classed("inactive", false);
-
-    // turn on lollipop sticks, circles
-    svg.selectAll(".dots")
-      .classed("inactive", false);
-
-
-    hideStruct();
-  })
+  dotplot.selectAll('.y-link text')
 
   function showStruct(cmpd_name) {
     // turn on structure
@@ -608,5 +681,48 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     struct.selectAll('li').remove()
   }
 
+
+  // IC/EC click events
+  tabs.selectAll('.nav-link').on('click', function() {
+    // find the current selection
+    new_tab = this.id;
+
+    // only redraw if necessary
+    if (new_tab != current_tab) {
+
+      // update the selected tab highlight
+      tabs.selectAll('.nav-link')
+        .classed('active', function(d) {
+          return (this.id == new_tab);
+        })
+
+      // reset the page to the start
+      current_page = 0;
+
+      // redraw the plot
+      draw_plot(current_page, new_tab);
+      // reset the tab
+      current_tab = new_tab;
+    }
+  })
+
+  // pagination click events
+  pg.selectAll('.page-link').on('click', function() {
+    new_page = this.textContent - 1;
+
+    // only redraw if necessary
+    if (new_page != current_page) {
+      // update the selected page highlight
+      pg.selectAll(".page-link")
+        .classed('page-selected', function(d, i) {
+          return i == new_page
+        })
+
+      // redraw the plot
+      draw_plot(new_page, current_tab);
+      // reset the page
+      current_page = new_page;
+    }
+  })
 
 }); // ---- END OF CSV IMPORT
