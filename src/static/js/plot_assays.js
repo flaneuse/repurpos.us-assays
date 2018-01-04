@@ -108,7 +108,26 @@ var struct_size = Math.max((width + margin.left + margin.right) * struct_fractio
   350);
 
 
-// --- Load data, populate table ---
+// Create empty containers, to be populated when data are called.
+//   -- structures (empty container) --
+var struct = d3.select("#dotplot-container")
+  .append('div')
+  .attr('id', 'structs')
+  .style('opacity', 0);
+
+struct.append('h4')
+  .attr('id', 'rollover-name')
+
+struct.append('img#structure')
+  .attr("width", '100%')
+  .attr("height", '100%')
+
+struct.append('ul#rollover-avg');
+
+struct.append('ul#rollover-indiv');
+
+// !! DATA DEPENDENT SECTION
+// --- Load data, populate vis ---
 d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
@@ -518,24 +537,6 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       .attr('y', function(d, i) {
         return i * y.step()
       });
-
-    //   -- structures (empty container) --
-    var struct = d3.select("#dotplot-container")
-      .append('div')
-      .attr('id', 'structs')
-      .style('background', 'aliceblue')
-      .style('opacity', 0);
-
-    struct.append('h4')
-      .attr('id', 'rollover-name')
-
-    struct.append('img#structure')
-      .attr("width", '100%')
-      .attr("height", '100%')
-
-    struct.append('ul#rollover-avg');
-
-    struct.append('ul#rollover-indiv');
   } // END OF PLOT FUNCTION
 
   // DRAW THE INITIAL PLOT
@@ -615,7 +616,7 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
   function showStruct(cmpd_name) {
     // turn on structure
-    struct.style('opacity', 1);
+    struct.style('opacity', 0.75);
 
     // bind data to structure fields
     var filtered = nested.filter(function(d) {
