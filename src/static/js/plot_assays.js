@@ -24,8 +24,7 @@ var margin = {
   left: 155
 }
 
-
-bufferH = 75; // number of pixels to space between vis and nav bar + bottom
+bufferH = 75; // number of pixels to space between vis and IC/EC nav bar
 container = d3.select('.container').node().getBoundingClientRect();
 windowH = window.innerHeight;
 // Available starting point for the visualization
@@ -40,9 +39,6 @@ var num_per_page = Math.round((maxH - margin.top) / min_height);
 
 
 // ---- Create structure for the table ----
-
-// Outer selector for the entire table
-cmpds = d3.select('#assay_table')
 
 var width = maxW - margin.left - margin.right,
   height = maxH - margin.top - margin.bottom;
@@ -97,8 +93,16 @@ function findMode(assay_type) {
   return mode;
 }
 
+function find_url(d) {
+  if (d.value.wikidata) {
+    return drug_url + d.value.wikidata;
+  } else {
+    return null;
+  }
+}
+
 function remove_symbols(d) {
-  return "_" + d.replace(/ /g, "").replace(/-/g, "");
+  return "_" + d.replace(/ /g, "").replace(/-/g, "").replace(/'/g, "").replace(/,/g, "");
 }
 
 // Create square rollover window, with dimensions 60% of the entire window
@@ -107,8 +111,9 @@ var struct_size = Math.max((width + margin.left + margin.right) * struct_fractio
   (height + margin.top + margin.bottom) * struct_fraction,
   350);
 
-
+// PRE-DATA DECLARATIONS & SELECTORS
 // Create empty containers, to be populated when data are called.
+
 //   -- structures (empty container) --
 var struct = d3.select("#dotplot-container")
   .append('div')
@@ -122,19 +127,93 @@ struct.append('img#structure')
   .attr("width", '100%')
   .attr("height", '100%')
 
-struct.append('ul#rollover-avg');
+let table_tooltip = struct.append('table');
+let header_tooltip = table_tooltip.append('thead').append('tr#data-headers');
+let indiv_tooltip = table_tooltip.append('tbody#rollover-indiv');
 
-struct.append('ul#rollover-indiv');
+header_tooltip.append('th#rollover-avgtitle');
+header_tooltip.append('th#rollover-avg');
+
+
+//  -- pagination --
+var pg = d3.select(".pagination");
+
+//  -- svg --
+d3.select("#dotplot-container")
+  .append('svg')
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g#dotplot")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var dotplot = d3.selectAll('#dotplot');
+
+var svg = d3.selectAll('svg');
+
+// -- dot plot --
+var dp = dotplot.append("g#graph")
+
+// -- dot plot rollover hyperlinks --
+var linksContainer = dotplot.append('g#rect-links')
+
+// -- color scalebar --
+var scalebar = dotplot.append("g#scalebar");
+
+// scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
+var defs = svg.append('defs');
+var linearGradient = defs.append('linearGradient')
+  .attr('id', 'linear-gradient')
+  // horizontal gradient
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "100%")
+  .attr("y2", "0%");
+
+
+// Append multiple color stops by using D3's data/enter step
+colorRange = d3.schemeGnBu[9];
+// colorRange = colorScale.range();
+linearGradient.selectAll("stop")
+  .data(colorRange)
+  .enter().append("stop")
+  .attr("offset", function(d, i) {
+    return i / (colorRange.length - 1);
+  })
+  .attr("stop-color", function(d) {
+    return d;
+  });
+
+// Draw the rectangle and fill with gradient
+scalebar.append("rect#scalebar")
+  .attr("width", width)
+  .attr("height", 10)
+  .attr("transform", "translate(0, -" + margin.top + ")")
+  .style("fill", "url(#linear-gradient)");
+
+scalebar.append("text")
+  .attr("class", "annotation-right annotation--x")
+  .attr("transform", "translate(" + width + ", -" + "20" + ")")
+  .text("more potent")
+
+scalebar.append("text")
+  .attr("class", "annotation-left annotation--x")
+  .attr("transform", "translate(" + 0 + ", -" + "20" + ")")
+  .text("less potent")
+
+// y-axis selector
+var cmpds = dotplot.append('g#y-links')
+  .attr('transform', 'translate(-6, 0)');
+
 
 // !! DATA DEPENDENT SECTION
 // --- Load data, populate vis ---
-d3.csv('/static/demo_data.csv', function(error, assay_data) {
-
+d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
   // -- DATA MANIPULATION --
   // filter out just those for the particular assay
-  // // filter values if NA (don't display)
-  assay_data = assay_data
+  // filter values if NA (don't display)
+  // TODO: figure out how to prevent data from reloading at every page.
+  assay_data = raw_assay_data
     .filter(function(d, i) {
       return d.genedata_id == assay_id && d.ac50;
     })
@@ -142,12 +221,8 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
   // convert numbers to numbers
   assay_data.forEach(function(d, i) {
     d.assay_val = +d.ac50;
-    d.page_num = Math.floor(i / num_per_page);
   })
-
   // console.log(assay_data)
-
-  // TODO: figure out how to prevent data from reloading at every page.
 
   // nest; calculate averages for the same drug.
   nested = d3.nest()
@@ -195,52 +270,66 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
         return a.value.avg - b.value.avg;
       });
 
-
+  // Remove duplicate values that came along for the ride.
   nested
-    // Calculate page numbers; remove duplicate values that came along for the ride.
     // TODO: figure out if there's a less kludgey way to do this. Also check if the rollup has the same values.
     .forEach(function(d, i) {
-      d.page_num = Math.floor(i / num_per_page);
       d.value.assay_type = findMode(d.value.datamode[0]);
       d.value.name = d.value.name[0];
       d.value.wikidata = d.value.wikidata[0];
       d.value.pubchem_id = d.value.pubchem_id[0];
 
     })
-  console.log(nested)
+  // console.log(nested)
 
-  // -- PAGINATION --
-  // calculate length of filtered data to generate pagination
-  num_cmpds = assay_data.length;
+  // -- BIND DATA TO AXES --
+  // `return d.assay_val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
+  // NOTE: Calculating x-domain based on the limits of the *entire* data series, not the filtered data (by page, or by EC/IC).
 
-  num_pages = Math.ceil(num_cmpds / num_per_page);
+  var maxVal = d3.max(nested, function(d) {
+    return d3.max(d.value.assay_vals);
+  });
 
-  // generate blank
-  var pages = Array(num_pages).fill(0)
-  pages[0] = 1 // Set the initial page to 1.
+  var minVal = d3.min(nested, function(d) {
+    return d3.min(d.value.assay_vals)
+  });
 
-  pg = d3.select(".pagination");
+  // update x domain
+  x.domain([maxVal, minVal]);
 
-  pg.selectAll("li")
-    .data(pages)
-    .enter().append("li.page").append('a.page-link')
-    .attr('href', '#')
-    .text(function(d, i) {
-      return i + 1;
-    })
-    .classed('page-selected', function(d, i) {
-      return i == current_page
-    })
+  // Code if using d3.scaleLog
+  // var numColors = colorScale.range().length;
+  //
+  // colorScale.domain(d3.range(Math.log10(maxVal),
+  //   Math.log10(minVal),
+  //   (Math.log10(maxVal) - Math.log10(minVal)) / numColors
+  // ));
 
-  function updatePage(idx) {
+  // update color domain
+  // Code if using d3.scaleSequential
+  colorScale.domain([Math.log10(d3.max(nested, function(d) {
+      return d3.max(d.value.assay_vals);
+    })),
+    Math.log10(d3.min(nested, function(d) {
+      return d3.min(d.value.assay_vals);
+    }))
+  ]);
 
-    pg.selectAll(".page-link")
-      .classed('page-selected', function(d, i) {
-        return i == idx
-      })
+  // DRAW DATA-DEPENDENT ELEMENTS THAT DON'T GET UPDATED -----------------------
 
-    generateTable(idx)
-  }
+  // -- X-AXES --
+  dotplot.append("g")
+    .attr("class", "axis axis--x")
+    // .attr("transform", "translate(0," + height + ")") // puts at the bottom of the svg
+    .attr("transform", "translate(0, -1)") // puts at the bottom of the svg
+    .call(xAxis)
+    .selectAll(".tick")
+    .data(x.ticks(3), function(d) {
+      return d;
+    }) // create a secondary set of ticks for minor scale; pulled from http://blockbuilder.org/mbostock/4349486
+    .exit()
+    .classed("minor", true);
+
 
   // -- PILLS -- : display IC50/EC50 tabs if warranted
   // var assay_types = [... new Set(nested.map(function(d) { return d.value.assay_type}))];
@@ -263,7 +352,6 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       .append('a.nav-link active')
       .attr('id', 'IC')
       .attr('data-toggle', 'tab')
-      // .attr('href', '#ic50')
       .attr('role', 'tab')
       .html('IC<sub>50</sub>');
   }
@@ -277,179 +365,164 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
       .append('a.nav-link')
       .attr('id', 'EC')
       .attr('data-toggle', 'tab')
-      // .attr('href', '#ec50')
       .attr('role', 'tab')
       .html('EC<sub>50</sub>');
   }
+  // end of PAGINATION ----
+  // END FIXED BUT DATA DEPENDENT ELEMENTS -----
 
-  // EVENT: on clicking breadcrumb, change the page. -----------------------------
-  pg.selectAll(".page-link").on("click", function(d, i) {
-
-    selected_page = this.text - 1;
-
-    updatePage(selected_page);
-  });
-  // end of PAGINATION ------------------------------------------------------------
-
-
-  // -- BIND DATA TO AXES --
-  // `return d.assay_val || Infinity;` argument ignores values that are NA / 0; deleted in favor of filtering them from the table to start.
-  // NOTE: Calculate x-domain based on the limits of the *entire* data series, not the filtered data.
-
-  var maxVal = d3.max(nested, function(d) {
-    return d3.max(d.value.assay_vals);
-  });
-
-  var minVal = d3.min(nested, function(d) {
-    return d3.min(d.value.assay_vals)
-  });
-
-  x.domain([maxVal, minVal]);
-
-  // Code if using d3.scaleLog
-  // var numColors = colorScale.range().length;
-  //
-  // colorScale.domain(d3.range(Math.log10(maxVal),
-  //   Math.log10(minVal),
-  //   (Math.log10(maxVal) - Math.log10(minVal)) / numColors
-  // ));
-
-  // Code if using d3.scaleSequential
-  colorScale.domain([Math.log10(d3.max(nested, function(d) {
-      return d3.max(d.value.assay_vals);
-    })),
-    Math.log10(d3.min(nested, function(d) {
-      return d3.min(d.value.assay_vals);
-    }))
-  ]);
-
+  // MAIN FUNCTION TO DRAW PLOT --------------------------------------------------
   function draw_plot(current_page, current_tab) {
     // Filter data to be only those compounds that exist on the current page and current tab
-    var data_currpage = nested.filter(function(d) {
-      return d.page_num == current_page && d.value.assay_type == current_tab;
+    // NOTE: needs to be a 2-stage filter, to avoid situations where IC and EC data are mixed together.
+    var data_currmethod = nested.filter(function(d) {
+      return d.value.assay_type == current_tab;
+    })
+
+    var data_currpage = data_currmethod.filter(function(d, i) {
+      return Math.floor(i / num_per_page) == current_page;
     });
 
+    // console.log(data_currpage)
 
-    // Set y-domain
+    // -- PAGINATION --
+    // calculate length of filtered data to generate pagination
+    num_cmpds = data_currmethod.length;
+
+    num_pages = Math.ceil(num_cmpds / num_per_page);
+
+    // generate blank array for the object.
+    var pages = Array(num_pages).fill(0)
+    pages[0] = 1 // Set the initial page to 1.
+
+    pg.selectAll("li")
+      .data(pages)
+      .enter().append("li.page").append('a.page-link')
+      .attr('href', '#')
+      .text(function(d, i) {
+        return i + 1;
+      })
+      .classed('page-selected', function(d, i) {
+        return i == current_page
+      })
+
+    // Set y-domain; required to be within draw function, since changes each time.
+    // (TODO: clean up chemical names)
     y.domain(data_currpage.map(function(d) {
       return d.value.name;
     }));
 
-    // function generateTable(current_page) {
 
+    // --- REDRAW Y-AXIS as text annotations, not axis, to link to repurpos.us page for each compound ---
+    // NOTE: necessary, since adding in hrefs to an axis is kind of a pain in the ass. Simplest, not necessarily best, method.
+// enter/update logic based on https://github.com/d3/d3-selection/issues/86
+      // JOIN: bind current data to the links / rectangles.
+      // parent selector: outside `a` element for hyperlink
+      var ylinks = cmpds.selectAll('.y-link')
+        .data(data_currpage);
 
-    // (1) Compound name (TODO: clean up chemical names)
+      // EXIT: remove any rectangles that no longer exist.
+      ylinks.exit().remove();
 
-    // generateTable(0);
+      // // child selector: nested rectangle.
+      var ytext = ylinks.select('#cmpd-name');
 
-    // -- DRAW PLOTS --
-    d3.select("#dotplot-container")
-      .append('svg')
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g#dotplot")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      // append `a` element to each parent
+      var ylinksEnter = ylinks
+        .enter().append('a.y-link');
 
-    dotplot = d3.selectAll('#dotplot');
+      // // Append rects (children to `a` wrapper)
+      var ytextEnter = ylinksEnter.append('text#cmpd-name')
+        .attr('x', 0)
+        .attr('y', function(d, i) {
+          return i * y.step() + y.step() / 2;
+        });
 
-    svg = d3.selectAll('svg')
+      // Update the parent links
+      ylinks.merge(ylinksEnter)
+        .attr('id', function(d) {
+          return d.value.name;
+        })
+        .attr('xlink:href', function(d) {
+          return find_url(d);
+        });
 
-
-
-    // -- SCALEBAR --
-    var scalebar = dotplot.append("g#scalebar");
-
-    // scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
-    var defs = svg.append('defs');
-    var linearGradient = defs.append('linearGradient')
-      .attr('id', 'linear-gradient')
-      // horizontal gradient
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "100%")
-      .attr("y2", "0%");
-
-
-    // Append multiple color stops by using D3's data/enter step
-    colorRange = d3.schemeGnBu[9];
-    // colorRange = colorScale.range();
-    linearGradient.selectAll("stop")
-      .data(colorRange)
-      .enter().append("stop")
-      .attr("offset", function(d, i) {
-        return i / (colorRange.length - 1);
+      // Update the children rectangle values
+      ytext.merge(ytextEnter)
+      .text(function(d) {
+        return d.value.name;
       })
-      .attr("stop-color", function(d) {
-        return d;
-      });
-
-    // Draw the rectangle and fill with gradient
-    scalebar.append("rect#scalebar")
-      .attr("width", width)
-      .attr("height", 10)
-      .attr("transform", "translate(0, -" + margin.top + ")")
-      .style("fill", "url(#linear-gradient)");
-
-    scalebar.append("text")
-      .attr("class", "annotation-right annotation--x")
-      .attr("transform", "translate(" + width + ", -" + "20" + ")")
-      .text("more potent")
-
-    scalebar.append("text")
-      .attr("class", "annotation-left annotation--x")
-      .attr("transform", "translate(" + 0 + ", -" + "20" + ")")
-      .text("less potent")
-
-    // -- AXES --
-    dotplot.append("g")
-      .attr("class", "axis axis--x")
-      // .attr("transform", "translate(0," + height + ")") // puts at the bottom of the svg
-      .attr("transform", "translate(0, -1)") // puts at the bottom of the svg
-      .call(xAxis)
-      .selectAll(".tick")
-      .data(x.ticks(3), function(d) {
-        return d;
-      }) // create a secondary set of ticks for minor scale; pulled from http://blockbuilder.org/mbostock/4349486
-      .exit()
-      .classed("minor", true);
-
-    dotplot.append("g")
-      .attr("class", "axis axis--y")
-      .call(yAxis);
-
-    // --- REDRAW Y-AXIS to link to repurpos.us page for each compound ---
-    dotplot.append('g#y-links')
-      .attr('transform', 'translate(-6, 0)')
-      .selectAll('.y-link')
-      .data(data_currpage)
-      .enter().append('a.y-link')
-
-      .attr("xlink:href", function(d) {
-        if (d.value.wikidata) {
-          return drug_url + d.value.wikidata;
-        } else {
-          return null;
-        }
-      })
-      .append('text')
       .classed('pointer', function(d) {
         if (d.value.wikidata) {
           return true;
         }
-      })
-      .text(function(d) {
-        return d.value.name;
-      })
-      .attr('x', 0)
-      .attr('y', function(d, i) {
-        return i * y.step() + y.step() / 2;
       });
 
+
     // -- DOTS --
-    var dot_grp = dotplot.append("g#graph")
-      .selectAll(".avg")
-      .data(data_currpage)
-      .enter().append("g.dots")
+    var dotgrp = dp.selectAll(".dots")
+      .data(data_currpage);
+
+    // EXIT: remove any rectangles that no longer exist.
+    dotgrp.exit().remove();
+
+    // append `g` element to each parent
+    var dotgrpEnter = dotgrp.enter().append("g.dots");
+
+
+    // -- lollipops --
+    // lollipop selector: line to min value
+    var lollis = dotgrp.select('.lollipop');
+
+    //  Append lines (children to `g` wrapper)
+    var lollisEnter = dotgrpEnter.append('line.lollipop')
+      .attr('x1', 8) // padded against the end of the x-axis
+      .attr('y1', function(d, i) {
+        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+      })
+      .attr('y2', function(d, i) {
+        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+      })
+      .attr('stroke-dasharray', '6,6');
+
+// -- individual values --
+// useful: https://groups.google.com/forum/#!topic/d3-js/5AxgsKK31EA
+      // child selector: indiv. circle
+      // NOTE: need to reselect ".dots" to get data bound to it; `dotgrp` doesn't seem to inherit.
+      var indivs = dp.selectAll(".dots").selectAll('.assay-val')
+        .data(function(d, i) {
+          if (d.value.num_cmpds > 1) {
+            // only return values if there are more than one compound;
+            return d.value.assay_vals;
+          } else {
+            return '';
+          }
+        })
+
+      // EXIT: remove any rectangles that no longer exist.
+      indivs.exit().remove();
+
+      //  Append dots (children to `g` wrapper)
+      var indivsEnter = indivs.enter().append('circle.assay-val')
+        .attr('r', dot_size * 0.75);
+
+
+    // -- avg. value --
+    // child selector: avg. circle
+    var avgs = dotgrp.select('.assay-avg');
+
+    //  Append dots (children to `g` wrapper)
+    var avgsEnter = dotgrpEnter.append('circle.assay-avg')
+      .attr('cy', function(d, i) {
+        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+      })
+    // .attr('cy', function(d) {
+    //   return y(d.value.name) + y.bandwidth() / 2;
+    // })
+
+
+    // Update the parent links
+    dotgrp.merge(dotgrpEnter)
       .attr("id", function(d) {
         // alter the id so it follows CSS selection rules: no spaces, no -, can't start w/ number.
         return remove_symbols(d.value.name);
@@ -458,91 +531,125 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
         return d.value.name;
       });
 
-
-    // --- lollipops: extend to largest value ---
-    var circles = dot_grp.append("line.lollipop")
+    // lollis: Update the children lollipop stick values
+    lollis.merge(lollisEnter)
       .attr('x2', function(d) {
         return x(d.value.min);
       })
-      .attr('x1', 8) // padded against the end of the x-axis
-      .attr('y1', function(d) {
-        return y(d.value.name) + y.bandwidth() / 2;;
-      })
-      .attr('y2', function(d) {
-        return y(d.value.name) + y.bandwidth() / 2;;
-      })
-      .attr('stroke-dasharray', '6,6');
 
+// individual measurements: update the children circle values.
+      indivs.merge(indivsEnter)
+        .attr('cx', function(d) {
+          return x(d)
+        })
+        .attr('cy', function(d, i) {
+          return this.parentNode.children[0].getAttribute('y1');
+           // return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;
+          // return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+        });
 
-    // -- avg. value --
-    dot_grp.append("circle.assay-avg")
-      // .at('cx', compose(x, ƒ('value.avg')))
+    // avg: Update the children circle values
+    avgs.merge(avgsEnter)
       .attr('cx', function(d) {
         return x(d.value.avg)
-      })
-      .attr('cy', function(d) {
-        return y(d.value.name) + y.bandwidth() / 2;
       })
       .style('fill', function(d) {
         return colorScale(Math.log10(d.value.avg));
       })
       .attr('r', dot_size);
 
-    // --- not avg. value ---
-    var circles = dot_grp.selectAll(".assay-val") // start a nested selection
-      .data(function(d, i) {
-        if (d.value.num_cmpds > 1) {
-          // only return values if there are more than one compound;
-          return d.value.assay_vals;
-        } else {
-          return '';
-        }
-      })
-      .enter().append("circle.assay-val")
-      .attr('cx', function(d, i) {
-        return x(d);
-      })
-      .attr('cy', function(d, i) {
-        return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
-      })
-      .attr('r', dot_size * 0.75);
+
+
+    // --- not avg. value --- (working, not updating)
+    // var circles = dot_grp.selectAll(".assay-val") // start a nested selection
+    //   .data(function(d, i) {
+    //     if (d.value.num_cmpds > 1) {
+    //       // only return values if there are more than one compound;
+    //       return d.value.assay_vals;
+    //     } else {
+    //       return '';
+    //     }
+    //   })
+    //   .enter().append("circle.assay-val")
+    //   .attr('cx', function(d, i) {
+    //     return x(d);
+    //   })
+    //   .attr('cy', function(d, i) {
+    //     return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
+    //   })
+    //   .attr('r', dot_size * 0.75);
 
 
     // --- HYPERLINK to repurpos.us page for each compound ---
-    dotplot.append('g#rect-links')
-      .selectAll('.cmpd-link')
-      .data(data_currpage)
-      .enter().append('a.cmpd-link')
+
+
+    // JOIN: bind current data to the links / rectangles.
+    // parent selector: outside `a` element for hyperlink
+    var links = linksContainer.selectAll('.cmpd-link')
+      .data(data_currpage);
+
+    // EXIT: remove any rectangles that no longer exist.
+    links.exit().remove();
+
+    // child selector: nested rectangle.
+    var rects = links.select('#cmpd-rect');
+
+    // append `a` element to each parent
+    var linksEnter = links
+      .enter().append('a.cmpd-link');
+
+    // Append rects (children to `a` wrapper)
+    var rectsEnter = linksEnter.append('rect#cmpd-rect')
+      .attr('x', 0)
+      .attr('height', y.bandwidth());
+
+    // Update the parent links
+    links.merge(linksEnter)
       .attr('id', function(d) {
-        return (d.value.name);
+        return d.value.name;
       })
-      .attr("xlink:href", function(d) {
-        if (d.value.wikidata) {
-          return drug_url + d.value.wikidata;
-        } else {
-          return null;
-        }
+      .attr('xlink:href', function(d) {
+        return find_url(d);
+      });
+
+    // Update the children rectangle values
+    rects.merge(rectsEnter)
+      .attr('y', function(d, i) {
+        return i * y.step() + y.step() * y.paddingOuter();
       })
-      .append('rect')
+      .attr('width', function(d, i) {
+        return x(d.value.min) + margin.right / 2;
+      })
       .classed('pointer', function(d) {
         if (d.value.wikidata) {
           return true;
         }
-      })
-      .attr('width', function(d) {
-        return x(d.value.min) + margin.right / 2;
-      })
-      .attr('height', y.bandwidth())
-      .attr('x', 0)
-      .attr('y', function(d, i) {
-        return i * y.step()
       });
-  } // END OF PLOT FUNCTION
 
-  // DRAW THE INITIAL PLOT
+  } // END OF PLOT FUNCTION ----------------------------------------------------
+
+  // DRAW THE INITIAL PLOT -----------------------------------------------------
+  // Needs to be called before event behavior declared.
   draw_plot(current_page, current_tab)
+  // ---------------------------------------------------------------------------
 
-  // MOUSEOVER
+  // EVENTS --------------------------------------------------------------------
+  // EVENT: on clicking page number, change the page.
+  function updatePage(idx) {
+    pg.selectAll(".page-link")
+      .classed('page-selected', function(d, i) {
+        return i == idx
+      })
+
+    generateTable(idx)
+  }
+  pg.selectAll(".page-link").on("click", function(d, i) {
+
+    selected_page = this.text - 1;
+
+    updatePage(selected_page);
+  });
+
   // Rollover behavior
   dotplot.selectAll('.y-link text').on('mouseover', function() {
 
@@ -596,9 +703,11 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
       // y-axis text
       dotplot.selectAll('.y-link text')
-        .attr('class', function(d) {
+        .classed('inactive', function(d) {
           if (d.value.name != selected) {
-            return 'inactive';
+            return true;
+          } else {
+            return false;
           }
         })
     })
@@ -612,8 +721,9 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
     })
 
   // --- MOUSEOUT ---
-  dotplot.selectAll('.y-link text')
+  // dotplot.selectAll('.y-link text')
 
+// <<< showStruct(cmpd_name) >>>
   function showStruct(cmpd_name) {
     // turn on structure
     struct.style('opacity', 0.75);
@@ -650,30 +760,46 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
 
     // Avg. value
-    struct.selectAll('#rollover-avg')
+    header_tooltip.selectAll('#rollover-avgtitle')
       .data(filtered)
       .attr('class', 'rollover-avg')
       .html(function(d) {
-        return 'average ' + d.value.assay_type + '<sub>50</sub>: ' + d3.format(".1e")(d.value.avg);
+        'average ' + d.value.assay_type + '<sub>50</sub>: '
+      })
+
+    header_tooltip.selectAll('#rollover-avg')
+      .data(filtered)
+      .attr('class', 'rollover-avg')
+      .html(function(d) {
+        return d3.format(".1e")(d.value.avg);
       })
 
     // Individual. value
-    struct.selectAll('#rollover-indiv')
+    let indivs = struct.selectAll('#rollover-indiv')
       .data(filtered.filter(function(d) {
         return d.value.num_cmpds > 1;
       }))
-      .selectAll('li')
+      .selectAll('tr')
       .data(function(d) {
         return d.value.assay_vals;
       })
-      .enter().append('li.rollover-indiv')
+      .enter().append('tr.rollover-indiv');
+
+    indivs.append('td')
+      .text(function(d, i) {
+        return 'measurement ' + (i + 1);
+      });
+
+    indivs.append('td')
       .text(function(d) {
         return d3.format(".1e")(d)
-      })
+      });
+
+
 
   }
 
-
+// <<< hideStruct() >>>
   function hideStruct() {
     struct.style('opacity', 0);
 
@@ -721,6 +847,8 @@ d3.csv('/static/demo_data.csv', function(error, assay_data) {
 
       // redraw the plot
       draw_plot(new_page, current_tab);
+
+      // cmpds.exit().remove()
       // reset the page
       current_page = new_page;
     }
