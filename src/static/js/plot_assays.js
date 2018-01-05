@@ -21,7 +21,7 @@ var margin = {
   top: 55,
   right: 40,
   bottom: 15,
-  left: 155
+  left: 160
 }
 
 bufferH = 75; // number of pixels to space between vis and IC/EC nav bar
@@ -431,7 +431,7 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     var pgButton = pg.selectAll("li")
       .data(pages);
 
-    // clear parent
+    // clear parent:
     pgButton.exit().remove();
 
     // child selector
@@ -453,11 +453,17 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
         return i == current_page
       })
 
+    // Initiate the .on click behavior. Necessary if pages have been deleted and then re-added.
+    pagination_on();
+
+
     // Set y-domain; required to be within draw function, since changes each time.
     // (TODO: clean up chemical names)
     y.domain(data_currpage.map(function(d) {
       return d.value.name;
     }));
+
+
 
 
     // --- REDRAW Y-AXIS as text annotations, not axis, to link to repurpos.us page for each compound ---
@@ -480,7 +486,7 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
     // // Append rects (children to `a` wrapper)
     var ytextEnter = ylinksEnter.append('text#cmpd-name')
-      .attr('x', 0)
+      .attr('x', -6)
       .attr('y', function(d, i) {
         return yByIdx(i);
       });
@@ -523,7 +529,7 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
     //  Append lines (children to `g` wrapper)
     var lollisEnter = dotgrpEnter.append('line.lollipop')
-      .attr('x1', 8) // padded against the end of the x-axis
+      .attr('x1', 0) // padded against the end of the x-axis
       .attr('y1', function(d, i) {
         return yByIdx(i);
       })
@@ -886,24 +892,28 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
   })
 
   // pagination click events
-  pg.selectAll('.page-link').on('click', function() {
-    new_page = this.textContent - 1;
+  pagination_on();
 
-    // only redraw if necessary
-    if (new_page != current_page) {
-      // update the selected page highlight
-      pg.selectAll(".page-link")
-        .classed('page-selected', function(d, i) {
-          return i == new_page
-        })
+  // <<< pagination_on() >>>
+  function pagination_on() {
+    pg.selectAll('.page-link').on('click', function() {
+      new_page = this.textContent - 1;
 
-      // redraw the plot
-      draw_plot(new_page, current_tab);
-
-      // cmpds.exit().remove()
-      // reset the page
-      current_page = new_page;
-    }
-  })
+      // only redraw if necessary
+      if (new_page != current_page) {
+        // update the selected page highlight
+        pg.selectAll(".page-link")
+          .classed('page-selected', function(d, i) {
+            return i == new_page
+          })
+        try {
+          // redraw the plot
+          draw_plot(new_page, current_tab);
+        } catch (error) {}
+        // reset the page
+        current_page = new_page;
+      }
+    })
+  }
 
 }); // ---- END OF CSV IMPORT
