@@ -52,7 +52,7 @@ var x = d3.scaleLog()
 var y = d3.scaleBand()
   .rangeRound([0, height])
   .paddingInner(0.05)
-  .paddingOuter(0.1);
+  .paddingOuter(0.35);
 
 // colorScale requires a sequential scale + associated interpolator. Unfortunately, that means the log-transform of the color needs to be manually specified.
 var colorScale = d3
@@ -336,6 +336,22 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
   var assay_types = nested.map(function(d) {
     return d.value.assay_type
   });
+
+  // <<< count_types(array, type) >>>
+  function count_types(array, type) {
+    counter = 0;
+
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] === type) {
+        counter++;
+      }
+    }
+    return counter;
+  }
+
+var ic_count = count_types(assay_types, 'IC');
+var ec_count = count_types(assay_types, 'EC');
+
   // count number of occurrences of each assay type.
   // assay_types = d3.nest()
   // .key(function(d) {return d})
@@ -345,11 +361,11 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
   var current_tab;
   var tabs = d3.select('#tabs');
 
-  if (assay_types.includes('IC')) {
-    current_tab = 'IC';
 
+
+  if (assay_types.includes('IC')) {
     tabs.append('li.nav-item')
-      .append('a.nav-link active')
+      .append('a.nav-link')
       .attr('id', 'IC')
       .attr('data-toggle', 'tab')
       .attr('role', 'tab')
@@ -357,10 +373,6 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
   }
 
   if (assay_types.includes('EC')) {
-    if (!current_tab) {
-      current_tab = 'EC';
-    }
-
     tabs.append('li.nav-item')
       .append('a.nav-link')
       .attr('id', 'EC')
@@ -368,6 +380,17 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
       .attr('role', 'tab')
       .html('EC<sub>50</sub>');
   }
+
+  // set current tab to be the larger of the number of IC/EC measurements.
+    if (ec_count > ic_count) {
+      current_tab = 'EC';
+
+      tabs.select('#EC').classed('active', true);
+    } else {
+      current_tab = 'IC';
+
+      tabs.select('#IC').classed('active', true);
+    }
   // end of PAGINATION ----
   // END FIXED BUT DATA DEPENDENT ELEMENTS -----
 
@@ -395,10 +418,25 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     var pages = Array(num_pages).fill(0)
     pages[0] = 1 // Set the initial page to 1.
 
-    pg.selectAll("li")
-      .data(pages)
-      .enter().append("li.page").append('a.page-link')
-      .attr('href', '#')
+// Join parent
+    var pgButton = pg.selectAll("li")
+      .data(pages);
+
+// clear parent
+      pgButton.exit().remove();
+
+      // child selector
+      var pgLink = pgButton.select('.page-link');
+
+// enter/append parent
+      var pgEnter = pgButton
+      .enter().append("li.page");
+
+// append child link
+      var pgLinkEnter = pgEnter.append('a.page-link')
+      .attr('href', '#');
+
+      pgLink.merge(pgLinkEnter)
       .text(function(d, i) {
         return i + 1;
       })
@@ -435,7 +473,7 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
       var ytextEnter = ylinksEnter.append('text#cmpd-name')
         .attr('x', 0)
         .attr('y', function(d, i) {
-          return i * y.step() + y.step() / 2;
+          return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
         });
 
       // Update the parent links

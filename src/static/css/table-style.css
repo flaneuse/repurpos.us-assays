@@ -16,7 +16,8 @@ h3#data-title {
   font-family: 'Lato', sans-serif;
   font-weight: 300;
   fill: #212529b0;
-  dominant-baseline: mathematical;
+  dominant-baseline: middle;
+  /* dominant-baseline: mathematical; */
   text-anchor: end;
 }
 
