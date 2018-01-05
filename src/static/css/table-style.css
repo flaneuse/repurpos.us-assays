@@ -82,10 +82,11 @@ th, td {
 #structs {
   padding: 12px;
   position: absolute;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #f3f3f4;
-  right: 6px;
-  bottom: 6px;
+  /* right: 6px;
+  top: 336px; */
+  /* bottom: 6px; */
 }
 
 #struct-name {

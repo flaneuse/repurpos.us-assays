@@ -54,6 +54,11 @@ var y = d3.scaleBand()
   .paddingInner(0.05)
   .paddingOuter(0.35);
 
+// helper to get height in pixels based on the index value.
+function yByIdx(i) {
+  return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+}
+
 // colorScale requires a sequential scale + associated interpolator. Unfortunately, that means the log-transform of the color needs to be manually specified.
 var colorScale = d3
   .scaleSequential(d3.interpolateGnBu);
@@ -234,6 +239,9 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
       return {
         num_cmpds: v.length,
         avg: d3.mean(v, function(d) {
+          return d.assay_val;
+        }),
+        max: d3.max(v, function(d) {
           return d.assay_val;
         }),
         min: d3.min(v, function(d) {
@@ -474,7 +482,7 @@ var ec_count = count_types(assay_types, 'EC');
       var ytextEnter = ylinksEnter.append('text#cmpd-name')
         .attr('x', 0)
         .attr('y', function(d, i) {
-          return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+          return yByIdx(i);
         });
 
       // Update the parent links
@@ -517,10 +525,10 @@ var ec_count = count_types(assay_types, 'EC');
     var lollisEnter = dotgrpEnter.append('line.lollipop')
       .attr('x1', 8) // padded against the end of the x-axis
       .attr('y1', function(d, i) {
-        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+        return yByIdx(i);
       })
       .attr('y2', function(d, i) {
-        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+          return yByIdx(i);
       })
       .attr('stroke-dasharray', '6,6');
 
@@ -553,7 +561,7 @@ var ec_count = count_types(assay_types, 'EC');
     //  Append dots (children to `g` wrapper)
     var avgsEnter = dotgrpEnter.append('circle.assay-avg')
       .attr('cy', function(d, i) {
-        return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+        return yByIdx(i);
       })
     // .attr('cy', function(d) {
     //   return y(d.value.name) + y.bandwidth() / 2;
@@ -598,29 +606,7 @@ var ec_count = count_types(assay_types, 'EC');
       .attr('r', dot_size);
 
 
-
-    // --- not avg. value --- (working, not updating)
-    // var circles = dot_grp.selectAll(".assay-val") // start a nested selection
-    //   .data(function(d, i) {
-    //     if (d.value.num_cmpds > 1) {
-    //       // only return values if there are more than one compound;
-    //       return d.value.assay_vals;
-    //     } else {
-    //       return '';
-    //     }
-    //   })
-    //   .enter().append("circle.assay-val")
-    //   .attr('cx', function(d, i) {
-    //     return x(d);
-    //   })
-    //   .attr('cy', function(d, i) {
-    //     return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;;
-    //   })
-    //   .attr('r', dot_size * 0.75);
-
-
     // --- HYPERLINK to repurpos.us page for each compound ---
-
 
     // JOIN: bind current data to the links / rectangles.
     // parent selector: outside `a` element for hyperlink
@@ -639,7 +625,6 @@ var ec_count = count_types(assay_types, 'EC');
 
     // Append rects (children to `a` wrapper)
     var rectsEnter = linksEnter.append('rect#cmpd-rect')
-      .attr('x', 0)
       .attr('height', y.bandwidth());
 
     // Update the parent links
@@ -653,11 +638,14 @@ var ec_count = count_types(assay_types, 'EC');
 
     // Update the children rectangle values
     rects.merge(rectsEnter)
+      .attr('x', function(d) {
+        return x(d.value.max) - margin.right / 2;
+      })
       .attr('y', function(d, i) {
         return i * y.step() + y.step() * y.paddingOuter();
       })
       .attr('width', function(d, i) {
-        return x(d.value.min) + margin.right / 2;
+        return x(d.value.min) - x(d.value.max) + margin.right;
       })
       .classed('pointer', function(d) {
         if (d.value.wikidata) {
@@ -749,6 +737,9 @@ var ec_count = count_types(assay_types, 'EC');
             return false;
           }
         })
+
+        // turn on structures
+        showStruct(this.id);
     })
     .on('mouseout', function() {
       dotplot.selectAll(".cmpd-link")
@@ -757,8 +748,8 @@ var ec_count = count_types(assay_types, 'EC');
       dotplot.selectAll(".y-link text")
         .classed("inactive", false);
 
+      hideStruct();
     })
-
 
 
   // --- MOUSEOUT ---
@@ -780,6 +771,16 @@ var ec_count = count_types(assay_types, 'EC');
       .text(function(d) {
         return d.value.name;
       });
+
+
+      d3.selectAll('#structs')
+        .data(filtered)
+        .style("top", function(d,i) {
+          return  y(d.value.name) + y.bandwidth() + margin.top +"px";
+        })
+        .style("left", function(d) {
+          return x(d.value.avg) - 100 + margin.left +"px";
+        });
 
     // Hypothesis: have to rebind the data to every element, since the children were declared before the data were bound. Therefore data doesn't inherit.
     // change structure URL
