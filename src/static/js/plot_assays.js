@@ -5,7 +5,7 @@
 var drug_url = 'https://repurpos.us/#/compound_data/';
 
 var struct_url1 = 'https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=';
-var struct_url2 = '&width=500&height=500';
+var struct_url2 = '&width=200&height=150';
 var struct_url3 = 'https://pubchem.ncbi.nlm.nih.gov/image/fl.html?cid=60961' // within their viewer
 var dot_size = 5;
 
@@ -120,12 +120,13 @@ var struct = d3.select("#dotplot-container")
   .attr('id', 'structs')
   .style('opacity', 0);
 
-struct.append('h4')
-  .attr('id', 'rollover-name')
 
 struct.append('img#structure')
   .attr("width", '100%')
   .attr("height", '100%')
+
+  struct.append('h5')
+    .attr('id', 'struct-name')
 
 let table_tooltip = struct.append('table');
 let header_tooltip = table_tooltip.append('thead').append('tr#data-headers');
@@ -688,7 +689,7 @@ var ec_count = count_types(assay_types, 'EC');
     updatePage(selected_page);
   });
 
-  // Rollover behavior
+  // Rollover behavior: y-axis
   dotplot.selectAll('.y-link text').on('mouseover', function() {
 
       var selected = "#" + remove_symbols(this.textContent);
@@ -758,6 +759,8 @@ var ec_count = count_types(assay_types, 'EC');
 
     })
 
+
+
   // --- MOUSEOUT ---
   // dotplot.selectAll('.y-link text')
 
@@ -772,7 +775,7 @@ var ec_count = count_types(assay_types, 'EC');
     });
 
     // Name of compound
-    struct.selectAll('#rollover-name')
+    struct.selectAll('#struct-name')
       .data(filtered)
       .text(function(d) {
         return d.value.name;

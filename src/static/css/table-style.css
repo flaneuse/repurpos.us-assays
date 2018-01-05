@@ -80,12 +80,19 @@ th, td {
 }
 
 #structs {
-  padding: 6px;
+  padding: 12px;
   position: absolute;
+  border-radius: 6px;
   background: #f3f3f4;
   right: 6px;
   bottom: 6px;
 }
+
+#struct-name {
+  margin-top: -8px;
+}
+
+
 
 /* nav elements:  tab panes, pagination */
 
