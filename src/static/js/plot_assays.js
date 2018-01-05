@@ -130,8 +130,8 @@ struct.append('img#structure')
   .attr("width", '100%')
   .attr("height", '100%')
 
-  struct.append('h5')
-    .attr('id', 'struct-name')
+struct.append('h5')
+  .attr('id', 'struct-name')
 
 let table_tooltip = struct.append('table');
 let header_tooltip = table_tooltip.append('thead').append('tr#data-headers');
@@ -358,8 +358,8 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     return counter;
   }
 
-var ic_count = count_types(assay_types, 'IC');
-var ec_count = count_types(assay_types, 'EC');
+  var ic_count = count_types(assay_types, 'IC');
+  var ec_count = count_types(assay_types, 'EC');
 
   // count number of occurrences of each assay type.
   // assay_types = d3.nest()
@@ -391,15 +391,15 @@ var ec_count = count_types(assay_types, 'EC');
   }
 
   // set current tab to be the larger of the number of IC/EC measurements.
-    if (ec_count > ic_count) {
-      current_tab = 'EC';
+  if (ec_count > ic_count) {
+    current_tab = 'EC';
 
-      tabs.select('#EC').classed('active', true);
-    } else {
-      current_tab = 'IC';
+    tabs.select('#EC').classed('active', true);
+  } else {
+    current_tab = 'IC';
 
-      tabs.select('#IC').classed('active', true);
-    }
+    tabs.select('#IC').classed('active', true);
+  }
   // end of PAGINATION ----
   // END FIXED BUT DATA DEPENDENT ELEMENTS -----
 
@@ -427,25 +427,25 @@ var ec_count = count_types(assay_types, 'EC');
     var pages = Array(num_pages).fill(0)
     pages[0] = 1 // Set the initial page to 1.
 
-// Join parent
+    // Join parent
     var pgButton = pg.selectAll("li")
       .data(pages);
 
-// clear parent
-      pgButton.exit().remove();
+    // clear parent
+    pgButton.exit().remove();
 
-      // child selector
-      var pgLink = pgButton.select('.page-link');
+    // child selector
+    var pgLink = pgButton.select('.page-link');
 
-// enter/append parent
-      var pgEnter = pgButton
+    // enter/append parent
+    var pgEnter = pgButton
       .enter().append("li.page");
 
-// append child link
-      var pgLinkEnter = pgEnter.append('a.page-link')
+    // append child link
+    var pgLinkEnter = pgEnter.append('a.page-link')
       .attr('href', '#');
 
-      pgLink.merge(pgLinkEnter)
+    pgLink.merge(pgLinkEnter)
       .text(function(d, i) {
         return i + 1;
       })
@@ -462,40 +462,40 @@ var ec_count = count_types(assay_types, 'EC');
 
     // --- REDRAW Y-AXIS as text annotations, not axis, to link to repurpos.us page for each compound ---
     // NOTE: necessary, since adding in hrefs to an axis is kind of a pain in the ass. Simplest, not necessarily best, method.
-// enter/update logic based on https://github.com/d3/d3-selection/issues/86
-      // JOIN: bind current data to the links / rectangles.
-      // parent selector: outside `a` element for hyperlink
-      var ylinks = cmpds.selectAll('.y-link')
-        .data(data_currpage);
+    // enter/update logic based on https://github.com/d3/d3-selection/issues/86
+    // JOIN: bind current data to the links / rectangles.
+    // parent selector: outside `a` element for hyperlink
+    var ylinks = cmpds.selectAll('.y-link')
+      .data(data_currpage);
 
-      // EXIT: remove any rectangles that no longer exist.
-      ylinks.exit().remove();
+    // EXIT: remove any rectangles that no longer exist.
+    ylinks.exit().remove();
 
-      // // child selector: nested rectangle.
-      var ytext = ylinks.select('#cmpd-name');
+    // // child selector: nested rectangle.
+    var ytext = ylinks.select('#cmpd-name');
 
-      // append `a` element to each parent
-      var ylinksEnter = ylinks
-        .enter().append('a.y-link');
+    // append `a` element to each parent
+    var ylinksEnter = ylinks
+      .enter().append('a.y-link');
 
-      // // Append rects (children to `a` wrapper)
-      var ytextEnter = ylinksEnter.append('text#cmpd-name')
-        .attr('x', 0)
-        .attr('y', function(d, i) {
-          return yByIdx(i);
-        });
+    // // Append rects (children to `a` wrapper)
+    var ytextEnter = ylinksEnter.append('text#cmpd-name')
+      .attr('x', 0)
+      .attr('y', function(d, i) {
+        return yByIdx(i);
+      });
 
-      // Update the parent links
-      ylinks.merge(ylinksEnter)
-        .attr('id', function(d) {
-          return d.value.name;
-        })
-        .attr('xlink:href', function(d) {
-          return find_url(d);
-        });
+    // Update the parent links
+    ylinks.merge(ylinksEnter)
+      .attr('id', function(d) {
+        return d.value.name;
+      })
+      .attr('xlink:href', function(d) {
+        return find_url(d);
+      });
 
-      // Update the children rectangle values
-      ytext.merge(ytextEnter)
+    // Update the children rectangle values
+    ytext.merge(ytextEnter)
       .text(function(d) {
         return d.value.name;
       })
@@ -528,30 +528,30 @@ var ec_count = count_types(assay_types, 'EC');
         return yByIdx(i);
       })
       .attr('y2', function(d, i) {
-          return yByIdx(i);
+        return yByIdx(i);
       })
       .attr('stroke-dasharray', '6,6');
 
-// -- individual values --
-// useful: https://groups.google.com/forum/#!topic/d3-js/5AxgsKK31EA
-      // child selector: indiv. circle
-      // NOTE: need to reselect ".dots" to get data bound to it; `dotgrp` doesn't seem to inherit.
-      var indivs = dp.selectAll(".dots").selectAll('.assay-val')
-        .data(function(d, i) {
-          if (d.value.num_cmpds > 1) {
-            // only return values if there are more than one compound;
-            return d.value.assay_vals;
-          } else {
-            return '';
-          }
-        })
+    // -- individual values --
+    // useful: https://groups.google.com/forum/#!topic/d3-js/5AxgsKK31EA
+    // child selector: indiv. circle
+    // NOTE: need to reselect ".dots" to get data bound to it; `dotgrp` doesn't seem to inherit.
+    var indivs = dp.selectAll(".dots").selectAll('.assay-val')
+      .data(function(d, i) {
+        if (d.value.num_cmpds > 1) {
+          // only return values if there are more than one compound;
+          return d.value.assay_vals;
+        } else {
+          return '';
+        }
+      })
 
-      // EXIT: remove any rectangles that no longer exist.
-      indivs.exit().remove();
+    // EXIT: remove any rectangles that no longer exist.
+    indivs.exit().remove();
 
-      //  Append dots (children to `g` wrapper)
-      var indivsEnter = indivs.enter().append('circle.assay-val')
-        .attr('r', dot_size * 0.75);
+    //  Append dots (children to `g` wrapper)
+    var indivsEnter = indivs.enter().append('circle.assay-val')
+      .attr('r', dot_size * 0.75);
 
 
     // -- avg. value --
@@ -584,16 +584,16 @@ var ec_count = count_types(assay_types, 'EC');
         return x(d.value.min);
       })
 
-// individual measurements: update the children circle values.
-      indivs.merge(indivsEnter)
-        .attr('cx', function(d) {
-          return x(d)
-        })
-        .attr('cy', function(d, i) {
-          return this.parentNode.children[0].getAttribute('y1');
-           // return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;
-          // return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
-        });
+    // individual measurements: update the children circle values.
+    indivs.merge(indivsEnter)
+      .attr('cx', function(d) {
+        return x(d)
+      })
+      .attr('cy', function(d, i) {
+        return this.parentNode.children[0].getAttribute('y1');
+        // return y(this.parentNode.getAttribute("name")) + y.bandwidth() / 2;
+        // return i * y.step() + y.step() * y.paddingOuter() + y.step() / 2;
+      });
 
     // avg: Update the children circle values
     avgs.merge(avgsEnter)
@@ -738,8 +738,8 @@ var ec_count = count_types(assay_types, 'EC');
           }
         })
 
-        // turn on structures
-        showStruct(this.id);
+      // turn on structures
+      showStruct(this.id);
     })
     .on('mouseout', function() {
       dotplot.selectAll(".cmpd-link")
@@ -755,7 +755,7 @@ var ec_count = count_types(assay_types, 'EC');
   // --- MOUSEOUT ---
   // dotplot.selectAll('.y-link text')
 
-// <<< showStruct(cmpd_name) >>>
+  // <<< showStruct(cmpd_name) >>>
   function showStruct(cmpd_name) {
     // turn on structure
     struct.style('opacity', 0.75);
@@ -773,14 +773,14 @@ var ec_count = count_types(assay_types, 'EC');
       });
 
 
-      d3.selectAll('#structs')
-        .data(filtered)
-        .style("top", function(d,i) {
-          return  y(d.value.name) + y.bandwidth() + margin.top +"px";
-        })
-        .style("left", function(d) {
-          return x(d.value.avg) - 100 + margin.left +"px";
-        });
+    d3.selectAll('#structs')
+      .data(filtered)
+      .style("top", function(d, i) {
+        return y(d.value.name) + y.bandwidth() + margin.top + "px";
+      })
+      .style("left", function(d) {
+        return x(d.value.avg) - 100 + margin.left + "px";
+      });
 
     // Hypothesis: have to rebind the data to every element, since the children were declared before the data were bound. Therefore data doesn't inherit.
     // change structure URL
@@ -817,31 +817,41 @@ var ec_count = count_types(assay_types, 'EC');
       })
 
     // Individual. value
-    let indivs = struct.selectAll('#rollover-indiv')
+    let indiv_tr = struct.selectAll('#rollover-indiv')
       .data(filtered.filter(function(d) {
-        return d.value.num_cmpds > 1;
+        return d.value.num_cmpds > 0;
       }))
       .selectAll('tr')
       .data(function(d) {
         return d.value.assay_vals;
-      })
+      });
+
+    indiv_tr.exit().remove();
+
+
+    let indiv_td1 = indiv_tr.select('.meas_id');
+    let indiv_td2 = indiv_tr.select('.meas_val');
+
+    let indivTREnter = indiv_tr
       .enter().append('tr.rollover-indiv');
 
-    indivs.append('td')
+
+    let indivTDEnter1 = indivTREnter.append('td.meas_id');
+    let indivTDEnter2 = indivTREnter.append('td.meas_val');
+
+    indiv_td1.merge(indivTDEnter1)
       .text(function(d, i) {
         return 'measurement ' + (i + 1);
       });
 
-    indivs.append('td')
+    indiv_td2.merge(indivTDEnter2)
       .text(function(d) {
         return d3.format(".1e")(d)
       });
 
-
-
   }
 
-// <<< hideStruct() >>>
+  // <<< hideStruct() >>>
   function hideStruct() {
     struct.style('opacity', 0);
 
