@@ -806,7 +806,7 @@ var ec_count = count_types(assay_types, 'EC');
       .data(filtered)
       .attr('class', 'rollover-avg')
       .html(function(d) {
-        'average ' + d.value.assay_type + '<sub>50</sub>: '
+        return 'average ' + d.value.assay_type + '<sub>50</sub>: '
       })
 
     header_tooltip.selectAll('#rollover-avg')
