@@ -20,11 +20,11 @@ min_height = 50; // number of pixels per drug in dot plot
 var margin = {
   top: 55,
   right: 40,
-  bottom: 15,
+  bottom: 0,
   left: 160
 }
 
-bufferH = 75; // number of pixels to space between vis and IC/EC nav bar
+bufferH = 0; // number of pixels to space between vis and IC/EC nav bar
 container = d3.select('.container').node().getBoundingClientRect();
 windowH = window.innerHeight;
 // Available starting point for the visualization
@@ -154,8 +154,6 @@ d3.select("#dotplot-container")
 
 var dotplot = d3.selectAll('#dotplot');
 
-var svg = d3.selectAll('svg');
-
 // -- dot plot --
 var dp = dotplot.append("g#graph")
 
@@ -166,7 +164,7 @@ var linksContainer = dotplot.append('g#rect-links')
 var scalebar = dotplot.append("g#scalebar");
 
 // scalebar based on https://www.visualcinnamon.com/2016/05/smooth-color-legend-d3-svg-gradient.html
-var defs = svg.append('defs');
+var defs = dotplot.append('defs');
 var linearGradient = defs.append('linearGradient')
   .attr('id', 'linear-gradient')
   // horizontal gradient
@@ -689,7 +687,7 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
       var selected = "#" + remove_symbols(this.textContent);
 
       // dim the rest of the axis
-      svg.selectAll(".y-link text")
+      dotplot.selectAll(".y-link text")
         .classed("inactive", true);
 
       d3.select(this)
@@ -697,12 +695,12 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
         .classed("active", true);
 
       // turn off lollipop sticks, circles
-      svg.selectAll(".dots")
+      dotplot.selectAll(".dots")
         .classed("inactive", true);
 
 
       // turn on selected
-      svg.selectAll(selected)
+      dotplot.selectAll(selected)
         .classed("inactive", false);
 
       // turn on structures
@@ -710,12 +708,12 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     })
     .on('mouseout', function() {
       // turn the axis back on
-      svg.selectAll(".y-link text")
+      dotplot.selectAll(".y-link text")
         .classed("active", false)
         .classed("inactive", false);
 
       // turn on lollipop sticks, circles
-      svg.selectAll(".dots")
+      dotplot.selectAll(".dots")
         .classed("inactive", false);
 
 
