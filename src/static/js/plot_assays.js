@@ -15,6 +15,8 @@ var current_page = 0;
 
 // -- Determine sizing for plot
 min_height = 50; // number of pixels per drug in dot plot
+struct_height = 320; // empirically determined, based on structure height of 150 px (since includes table as well)
+struct_width = 200; // width of structure, based on image.
 
 // --- Setup margins for svg object
 var margin = {
@@ -788,10 +790,23 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     d3.selectAll('#structs')
       .data(filtered)
       .style("top", function(d, i) {
-        return y(d.value.name) + y.bandwidth() + margin.top + "px";
+let y_posit = y(d.value.name) + y.bandwidth() + margin.top;
+if (y_posit + struct_height < height){
+        return y_posit + "px";
+} else if(y_posit - struct_height > 0) {
+  // fits within svg
+  return y_posit - struct_height + "px";
+} else {
+  return margin.top + 10 + "px";
+}
       })
       .style("left", function(d) {
-        return x(d.value.avg) - 100 + margin.left + "px";
+        let y_posit = y(d.value.name) + y.bandwidth() + margin.top;
+if (y_posit - struct_height < 0){
+return width + margin.left - struct_width - 10 + "px";
+} else {
+        return x(d.value.avg) - struct_width/2 + margin.left + "px";
+      }
       });
 
     // Hypothesis: have to rebind the data to every element, since the children were declared before the data were bound. Therefore data doesn't inherit.
