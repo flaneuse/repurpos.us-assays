@@ -621,14 +621,14 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     links.exit().remove();
 
     // child selector: nested rectangle.
-    var rects = links.select('#cmpd-rect');
+    var rects = links.select('.cmpd-rect');
 
     // append `a` element to each parent
     var linksEnter = links
       .enter().append('a.cmpd-link');
 
     // Append rects (children to `a` wrapper)
-    var rectsEnter = linksEnter.append('rect#cmpd-rect')
+    var rectsEnter = linksEnter.append('rect.cmpd-rect')
       .attr('height', y.bandwidth());
 
     // Update the parent links
@@ -642,6 +642,9 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
     // Update the children rectangle values
     rects.merge(rectsEnter)
+      .attr('id', function(d) {
+        return d.value.name;
+      })
       .attr('x', function(d) {
         return x(d.value.max) - margin.right / 2;
       })
@@ -681,6 +684,8 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     updatePage(selected_page);
   });
 
+
+
   // Rollover behavior: y-axis
   dotplot.selectAll('.y-link text').on('mouseover', function() {
 
@@ -719,6 +724,9 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
       hideStruct();
     })
+
+
+
 
   // mouseover: rects
   dotplot.selectAll('.cmpd-link')
@@ -857,11 +865,16 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
 
   // <<< hideStruct() >>>
   function hideStruct() {
-    struct.style('opacity', 0);
+    struct
+    .transition()
+    .duration(0)
+    .style('opacity', 0)
+    .style('left', '-0px'); // cheat to allow adjacent rects to trigger mouseovers.
+    // Since the struct divs can in principle be quite close to an adjacent rect, it can obscure an underlying element.
+    // As long as it's on top of the svg rects, it'll prevent a mouseout into a mouseover from being detected.
+    // Rather than entirely killing it, shifting it out of the way.
+    // Imperfect; if you move quite quickly the transition doesn't occur fast enough.
 
-    struct.selectAll('#structure').exit().remove();
-
-    struct.selectAll('li').remove()
   }
 
 
