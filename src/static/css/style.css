@@ -12,14 +12,6 @@ a, a.dwnld-link:hover {
 }
 
 
-.id {
-  color: #3D6DE0;
-  float: left;
-  width: 15%;
-  padding: 1% 0;
-  text-align: right;
-}
-
 .assay-id, .home-link {
   margin-top: 6px;
   margin-bottom: 0;
@@ -74,9 +66,4 @@ a, a.dwnld-link:hover {
 
 #content{
   margin: 15px;
-}
-
-
-#label {
-  font-weight: 400;
 }

@@ -1,20 +1,42 @@
 /*Table widths for main assay page*/
-#assays{
+
+#assays {
   table-layout: fixed;
 }
 
 #table_id {
   width: 10%;
+  min-width: 70px;
 }
 
 #table_assay {
-  width: 30%;
+  width: 40%;
 }
 
 #table_descrip {
-  width: 60%;
+  width: 50%;
 }
 
 td {
-  padding-bottom: 8px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+#label>th {
+  font-size: 1.2em;
+  opacity: 0.5;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.id {
+  color: #21252945;
+  float: left;
+  padding-top: 15%;
+  padding-bottom: 15%;
+  text-align: right;
+}
+
+tr:nth-child(even) {
+  background: #3d6de008;
 }
