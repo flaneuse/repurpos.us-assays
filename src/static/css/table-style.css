@@ -100,17 +100,34 @@ th, td {
   margin-bottom: 24px;
 }
 
+
+.dropdown-menu {
+  background-color: #f4f4f4;
+  min-width: 100px;
+}
+
+.dropdown-menu > li {
+  text-align: center;
+}
+
+.dwnld-link {
+  color: #21252980;
+  font-size: 1rem;
+  font-weight: 300;
+  font-family: 'Lato', sans-serif;
+}
+
 .dwnld-btn {
   background-color: #2125290d;
   border-radius: 3px;
   margin-left: 20px;
   border: 1px #2125290d solid;
   /* border-bottom-width: 4px; */
-  color: #21252980;
+  -webkit-text-fill-color: #21252940; /*text color*/
+  color: #21252955; /*caret color*/
   font-size: 1rem;
   font-weight: 300;
   font-family: 'Lato', sans-serif;
-  -webkit-text-fill-color: #21252935;
 }
 
 .dwnld-btn:hover {

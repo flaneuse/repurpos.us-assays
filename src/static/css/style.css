@@ -3,7 +3,7 @@ body {
   font-weight: 300;
 }
 
-a {
+a, a.dwnld-link:hover {
   color: #3D6DE0;
 }
 

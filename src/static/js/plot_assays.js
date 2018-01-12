@@ -687,10 +687,15 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     updatePage(selected_page);
   });
 
+// Dropdown button for download
+$('.dropdown-toggle').dropdown();
 
-// Download button
-d3.selectAll('.dwnld-btn').on('click', function() {
+// Download buttons
+d3.selectAll('#csv-dwnld').on('click', function() {
   download_file(assay_data, 'csv');
+})
+
+d3.selectAll('#json-dwnld').on('click', function() {
   download_file(assay_data, 'json');
 })
 
