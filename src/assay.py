@@ -18,7 +18,7 @@ app = Flask(__name__) # Use __name__ for single app; __main__ for multiple mods
 # Create homepage
 @app.route('/')
 def make_homepage():
-    return render_template('all_assays.html', df = df)
+    return render_template('assay_home.html', df = df)
 
 
 # individual page template
