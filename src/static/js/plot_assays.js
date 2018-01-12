@@ -126,7 +126,8 @@ var struct_size = Math.max((width + margin.left + margin.right) * struct_fractio
 var struct = d3.select("#dotplot-container")
   .append('div')
   .attr('id', 'structs')
-  .style('opacity', 0);
+  .style('opacity', 0.75)
+  .style('display', 'none');
 
 
 struct.append('img#structure')
@@ -820,7 +821,8 @@ function to_csv(data) {
       // turn on structures
       showStruct(this.id);
     })
-    .on('mouseout', function() {
+
+    .on('mouseleave', function() {
       dotplot.selectAll(".cmpd-link")
         .classed("inactive", false);
 
@@ -831,13 +833,11 @@ function to_csv(data) {
     })
 
 
-  // --- MOUSEOUT ---
-  // dotplot.selectAll('.y-link text')
-
   // <<< showStruct(cmpd_name) >>>
   function showStruct(cmpd_name) {
     // turn on structure
-    struct.style('opacity', 0.75);
+    struct
+    .style('display', 'inline');
 
     // bind data to structure fields
     var filtered = nested.filter(function(d) {
@@ -948,12 +948,7 @@ function to_csv(data) {
     struct
       .transition()
       .duration(0)
-      .style('opacity', 0)
-      .style('left', '-0px'); // cheat to allow adjacent rects to trigger mouseovers.
-    // Since the struct divs can in principle be quite close to an adjacent rect, it can obscure an underlying element.
-    // As long as it's on top of the svg rects, it'll prevent a mouseout into a mouseover from being detected.
-    // Rather than entirely killing it, shifting it out of the way.
-    // Imperfect; if you move quite quickly the transition doesn't occur fast enough.
+      .style('display', 'none');
 
   }
 

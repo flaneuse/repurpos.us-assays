@@ -80,6 +80,7 @@ th, td {
 }
 
 #structs {
+  pointer-events: none;
   padding: 12px;
   position: absolute;
   border-radius: 5px;
