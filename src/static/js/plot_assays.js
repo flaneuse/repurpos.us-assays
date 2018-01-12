@@ -9,6 +9,7 @@ var struct_url2 = '&width=200&height=150';
 var struct_url3 = 'https://pubchem.ncbi.nlm.nih.gov/image/fl.html?cid=60961' // within their viewer
 var dot_size = 5;
 
+var assay_title = d3.select('.assay-title').text();
 var assay_id = d3.select('.assay-id').text();
 
 var current_page = 0;
@@ -687,6 +688,65 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
   });
 
 
+// Download button
+d3.selectAll('.dwnld-btn').on('click', function() {
+  download_file(assay_data, 'csv');
+  download_file(assay_data, 'json');
+})
+
+// <<< download handler >>>
+// download function from https://code-maven.com/create-and-download-csv-with-javascript
+// and https://halistechnology.com/2015/05/28/use-javascript-to-export-your-data-as-csv/
+function download_file(data, filetype) {
+
+switch (filetype) {
+  case 'csv':
+    dwnld_data = to_csv(data);
+    break;
+  case 'json':
+    dwnld_data = to_json(data);
+    break;
+  default: null;
+}
+
+
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(dwnld_data);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = assay_title.replace(/\s/g, '') + 'data.' + filetype;
+    hiddenElement.click();
+}
+
+// <<< convert to json file format >>>
+function to_json(data) {
+  return JSON.stringify(data);
+}
+
+// <<< convert to csv file format >>>
+function to_csv(data) {
+  columnDelimiter = ',';
+      lineDelimiter = '\n';
+
+      colnames = Object.keys(assay_data[0]);
+
+      csv = '';
+      csv += colnames.join(columnDelimiter);
+      csv += lineDelimiter;
+
+      assay_data.forEach(function(item) {
+          counter = 0;
+          colnames.forEach(function(key) {
+              if (counter > 0) csv += columnDelimiter;
+
+              csv += item[key];
+              counter ++;
+          });
+          csv += lineDelimiter;
+      });
+
+      return csv
+}
+
 
   // Rollover behavior: y-axis
   dotplot.selectAll('.y-link text').on('mouseover', function() {
@@ -790,23 +850,23 @@ d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
     d3.selectAll('#structs')
       .data(filtered)
       .style("top", function(d, i) {
-let y_posit = y(d.value.name) + y.bandwidth() + margin.top;
-if (y_posit + struct_height < height){
-        return y_posit + "px";
-} else if(y_posit - struct_height > 0) {
-  // fits within svg
-  return y_posit - struct_height + "px";
-} else {
-  return margin.top + 10 + "px";
-}
+        let y_posit = y(d.value.name) + y.bandwidth() + margin.top;
+        if (y_posit + struct_height < height) {
+          return y_posit + "px";
+        } else if (y_posit - struct_height > 0) {
+          // fits within svg
+          return y_posit - struct_height + "px";
+        } else {
+          return margin.top + 10 + "px";
+        }
       })
       .style("left", function(d) {
         let y_posit = y(d.value.name) + y.bandwidth() + margin.top;
-if (y_posit - struct_height < 0){
-return width + margin.left - struct_width - 10 + "px";
-} else {
-        return x(d.value.avg) - struct_width/2 + margin.left + "px";
-      }
+        if (y_posit - struct_height < 0) {
+          return width + margin.left - struct_width - 10 + "px";
+        } else {
+          return x(d.value.avg) - struct_width / 2 + margin.left + "px";
+        }
       });
 
     // Hypothesis: have to rebind the data to every element, since the children were declared before the data were bound. Therefore data doesn't inherit.
@@ -881,10 +941,10 @@ return width + margin.left - struct_width - 10 + "px";
   // <<< hideStruct() >>>
   function hideStruct() {
     struct
-    .transition()
-    .duration(0)
-    .style('opacity', 0)
-    .style('left', '-0px'); // cheat to allow adjacent rects to trigger mouseovers.
+      .transition()
+      .duration(0)
+      .style('opacity', 0)
+      .style('left', '-0px'); // cheat to allow adjacent rects to trigger mouseovers.
     // Since the struct divs can in principle be quite close to an adjacent rect, it can obscure an underlying element.
     // As long as it's on top of the svg rects, it'll prevent a mouseout into a mouseover from being detected.
     // Rather than entirely killing it, shifting it out of the way.

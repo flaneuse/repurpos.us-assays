@@ -96,10 +96,30 @@ th, td {
 
 
 /* nav elements:  tab panes, pagination */
+.data-header{
+  margin-bottom: 24px;
+}
+
+.dwnld-btn {
+  background-color: #2125290d;
+  border-radius: 3px;
+  margin-left: 20px;
+  border: 1px #2125290d solid;
+  /* border-bottom-width: 4px; */
+  color: #21252980;
+  font-size: 1rem;
+  font-weight: 300;
+  font-family: 'Lato', sans-serif;
+  -webkit-text-fill-color: #21252935;
+}
+
+.dwnld-btn:hover {
+  background-color: #21252921;
+}
 
 .nav-pills {
-  margin-top: -2rem;
-  margin-bottom: 16px;
+  margin-top: -0.5rem;
+  /* margin-bottom: 16px; */
 }
 
 .nav-pills .nav-link {

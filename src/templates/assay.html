@@ -2,7 +2,7 @@
 <div class="row">
   {% if df.title %}
   <div class="col-10">
-    <h1 class="title">{{ df.title }}</h1>
+    <h1 class="title assay-title">{{ df.title }}</h1>
   </div>
   <div class="assay-id id">{{ df.id }}</div>
   {% else %}
@@ -40,13 +40,39 @@
 
 <!-- VIS -->
 <div id="vis">
-  <h3 id="data-title">Assay data</h3>
+  <div class="row">
+    <div class="col-10 data-header">
+      <h3 id="data-title">Assay data
+              <!-- <button type="button" class="dwnld-btn"> -->
+            <!-- download </button> -->
 
-
-
-  <!-- Nav tabs -->
-  <ul class="nav nav-pills justify-content-end" id="tabs" role="tablist">
+            <!-- <div class="dropdown"> -->
+  <button class="dwnld-btn btn-default dropdown-toggle" type="button" id="downloadMenu"
+  data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    download
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+    <li><a href="#" id="csv-dwnld">csv</a></li>
+        <li><a href="#" id="json-dwnld">json</a></li>
   </ul>
+<!-- </div> -->
+
+    </h3>
+    </div>
+
+
+    <div class="col-2">
+      <!-- Nav tabs -->
+      <ul class="nav nav-pills justify-content-end" id="tabs" role="tablist">
+      </ul>
+    </div>
+
+
+  </div>
+
+
+
 
   <!-- Tab panes -->
   <div class="tab-content">
@@ -54,7 +80,7 @@
     <div class="tab-pane" id="ec50" role="tabpanel"></div>
   </div>
 
-<!-- SVG dotplot -->
+  <!-- SVG dotplot -->
   <div id="dotplot-container">
 
   </div>
@@ -68,7 +94,8 @@
   <script src="/static/lib/d3-scale-chromatic.min.js"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/plot_assays.js') }}"></script>
 
-</div> <!--  end vis -->
+</div>
+<!--  end vis -->
 
 
 
