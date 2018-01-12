@@ -20,6 +20,19 @@ a, a.dwnld-link:hover {
   text-align: right;
 }
 
+.assay-id, .home-link {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.assay-id {
+    color: #21252945;
+}
+
+.home-link {
+    color: #3D6DE0;
+}
+
 #viewmore {
   padding: 10px;
 }

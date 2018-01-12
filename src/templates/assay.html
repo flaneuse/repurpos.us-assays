@@ -4,7 +4,10 @@
   <div class="col-10">
     <h1 class="title assay-title">{{ df.title }}</h1>
   </div>
-  <div class="assay-id id">{{ df.id }}</div>
+<div class="col-2">
+  <p class="text-right assay-id">{{ df.id }}</p>
+  <p class="text-right home-link"><a href="/">return to all assays</a></p>
+  </div>
   {% else %}
   <h1>Unknown assay</h1> {% endif %}
 
