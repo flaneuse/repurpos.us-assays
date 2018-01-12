@@ -4,53 +4,27 @@
 
 from flask import Flask, url_for
 from flask import render_template
+from functools import partial
 import pandas as pd
 
 # Import assay data file
 data_file = 'data/assay_descriptions.csv'
 df = pd.read_csv(data_file)
 
-# print(df)
-# for idx, row in df.iterrows():
-#     print(df.at[idx, 'assay_name'])
 
 # Create Flask app
 app = Flask(__name__) # Use __name__ for single app; __main__ for multiple mods
 
+# Create homepage
 @app.route('/')
 def make_homepage():
     return render_template('all_assays.html', df = df)
 
-#
-# @app.route('/<int:row_id>')
-# def make_indiv(row_id):
-#     # print()
-#     # for row in df:
-#     for idx, row in df.iterrows():
-#         print("starting for loop")
-#         print(idx)
-#         # print(row)
-#         # print('row([id]): ')
-#         # print(row['id'])
-#         # print(type(row['id']))
-#         # print('input: ')
-#         # print(row_id)
-#         # print(type(row_id))
-#         # print('logic:')
-#         # print(row['id'] == row_id)
-#         # if row['id'] == row_id:
-#         # print("LOGIC IS TRU")
-#         # return render_template(template, object=row)
-#         # for i in range(5): # Doesn't work outside make_homepage; need to not override make_homepage each time.
-#             # return render_template('test.html', id = row)
-#         return "hello world."
 
-@app.route('/assays/')
-def make_assays(row_id = 0):
-
-    # temporarily, and not particularly intelligently: pull out just the first row as a test case.
-    # assay_df = df.iloc[[0]].to_dict()
-    # longer term-- embed as json?
+# individual page template
+def make_assays(row_id):
+    # Filter data to put in the right format.
+    # Perhaps not smartest way... too manual
     assay_df = {
         'title': df.at[row_id,'title'],
         'id': df.at[row_id, 'genedata_id'],
@@ -90,5 +64,14 @@ def make_assays(row_id = 0):
 
     return render_template('assay.html', df = assay_df)
 
-# if __name__ == '__main__':
-#     app.run(debug=True, use_reloader=True)
+# --- Create individual pages ---
+# key is that the add_url_rule() function requires the view function to be a function, not string / html / etc.
+# BUT-- need to change the view function to pass it different data.
+# Therefore, using the python `partial` function to do so.
+# https://stackoverflow.com/questions/14342969/python-flask-route-with-dynamic-first-component/14349852#14349852
+for idx, row in df.iterrows():
+    app.add_url_rule(
+    "/" + str(row.id), # url
+    "page" + str(row.id),
+    partial(make_assays, row.id) # view function to render the page
+    )

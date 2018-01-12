@@ -11,6 +11,7 @@ var dot_size = 5;
 
 var assay_title = d3.select('.assay-title').text();
 var assay_id = d3.select('.assay-id').text();
+console.log(assay_id)
 
 var current_page = 0;
 
@@ -215,7 +216,7 @@ var cmpds = dotplot.append('g#y-links')
 
 // !! DATA DEPENDENT SECTION
 // --- Load data, populate vis ---
-d3.csv('/static/demo_data.csv', function(error, raw_assay_data) {
+d3.csv('/static/assay_data.csv', function(error, raw_assay_data) {
 
   // -- DATA MANIPULATION --
   // filter out just those for the particular assay
