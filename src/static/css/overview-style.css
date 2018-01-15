@@ -38,5 +38,6 @@ td {
 }
 
 tr:nth-child(even) {
-  background: #3d6de008;
+  background: #3d6de00f;
+  border-right: #3d6de050 3px solid;
 }

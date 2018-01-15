@@ -51,6 +51,10 @@ a, a.dwnld-link:hover {
   font-size: 20px;
 }
 
+#label{
+  font-weight: 400;
+}
+
 .condits{
   color: #818182;
   padding-top: 6px;
