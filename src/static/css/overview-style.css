@@ -17,7 +17,7 @@
   width: 50%;
 }
 
-td {
+#assays td {
   padding-top: 12px;
   padding-bottom: 12px;
 }
@@ -37,7 +37,7 @@ td {
   text-align: right;
 }
 
-tr:nth-child(even) {
+#assays tr:nth-child(even) {
   background: #3d6de00f;
   border-right: #3d6de050 3px solid;
 }
