@@ -4,9 +4,6 @@
 // ex.: https://repurpos.us/#/compound_data/Q10859697
 var drug_url = 'https://repurpos.us/#/compound_data/';
 
-var struct_url1 = 'https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=';
-var struct_url2 = '&width=200&height=150';
-var struct_url3 = 'https://pubchem.ncbi.nlm.nih.gov/image/fl.html?cid=60961' // within their viewer
 var dot_size = 5;
 
 var assay_title = d3.select('.assay-title').text();
@@ -15,8 +12,9 @@ var assay_id = d3.select('.assay-id').text();
 var current_page = 0;
 
 // -- Determine sizing for plot
+min_plot_height = 400; // For smaller screens; if the size of the plot is too small, make the SVG the size of the entire window (more or less)
 min_height = 50; // number of pixels per drug in dot plot
-struct_height = 320; // empirically determined, based on structure height of 150 px (since includes table as well)
+struct_height = 320; // empirically determined height of entire structure container, based on structure height of 150 px (since includes table as well)
 struct_width = 200; // width of structure, based on image.
 
 // --- Setup margins for svg object
@@ -27,7 +25,7 @@ var margin = {
   left: 160
 }
 
-bufferH = 0; // number of pixels to space between vis and IC/EC nav bar
+bufferH = 0.85; // Scalar to shrink the maximum available height by
 container = d3.select('.container').node().getBoundingClientRect();
 windowH = window.innerHeight;
 // Available starting point for the visualization
@@ -35,8 +33,14 @@ nav_container = d3.select('.nav-tabs').node().getBoundingClientRect();
 maxW = nav_container.width;
 
 // Set max height to be the entire height of the window, minus top/bottom buffer
-maxH = windowH - nav_container.bottom - bufferH;
-maxH = maxH * 0.85;
+maxH = windowH - nav_container.bottom;
+maxH = maxH * bufferH;
+
+// For small screens: draw the plot as big as the screen will allow
+if (maxH < min_plot_height) {
+    maxH = (windowH - nav_container.height) * bufferH;
+}
+
 
 var num_per_page = Math.round((maxH - margin.top) / min_height);
 
@@ -131,8 +135,8 @@ var struct = d3.select("#dotplot-container")
 
 
 struct.append('img#structure')
-  .attr("width", '100%')
-  .attr("height", '100%')
+  .attr("width", '75%')
+  .attr("height", '75%')
 
 struct.append('h5')
   .attr('id', 'struct-name')
@@ -881,7 +885,7 @@ function to_tsv(data) {
       .data(filtered)
       .attr("src", function(d) {
         if (d.value.pubchem_id) {
-          return struct_url1 + d.value.pubchem_id + struct_url2;
+            return 'static/img/' + d.value.pubchem_id + '.png';
         }
       })
       .style('opacity', function(d) {
