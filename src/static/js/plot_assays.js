@@ -11,7 +11,6 @@ var dot_size = 5;
 
 var assay_title = d3.select('.assay-title').text();
 var assay_id = d3.select('.assay-id').text();
-console.log(assay_id)
 
 var current_page = 0;
 
@@ -693,8 +692,8 @@ d3.csv('/static/assay_data.csv', function(error, raw_assay_data) {
 $('.dropdown-toggle').dropdown();
 
 // Download buttons
-d3.selectAll('#csv-dwnld').on('click', function() {
-  download_file(assay_data, 'csv');
+d3.selectAll('#tsv-dwnld').on('click', function() {
+  download_file(assay_data, 'tsv');
 })
 
 d3.selectAll('#json-dwnld').on('click', function() {
@@ -707,8 +706,8 @@ d3.selectAll('#json-dwnld').on('click', function() {
 function download_file(data, filetype) {
 
 switch (filetype) {
-  case 'csv':
-    dwnld_data = to_csv(data);
+  case 'tsv':
+    dwnld_data = to_tsv(data);
     break;
   case 'json':
     dwnld_data = to_json(data);
@@ -718,7 +717,7 @@ switch (filetype) {
 
 
     var hiddenElement = document.createElement('a');
-    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(dwnld_data);
+    hiddenElement.href = 'data:text/tsv;charset=utf-8,' + encodeURI(dwnld_data);
     hiddenElement.target = '_blank';
     hiddenElement.download = assay_title.replace(/\s/g, '') + 'data.' + filetype;
     hiddenElement.click();
@@ -729,29 +728,29 @@ function to_json(data) {
   return JSON.stringify(data);
 }
 
-// <<< convert to csv file format >>>
-function to_csv(data) {
-  columnDelimiter = ',';
+// <<< convert to tsv file format >>>
+function to_tsv(data) {
+  columnDelimiter = '\t'; // technically, tab-separated, since some chemical cmpds have commas in names.
       lineDelimiter = '\n';
 
       colnames = Object.keys(assay_data[0]);
 
-      csv = '';
-      csv += colnames.join(columnDelimiter);
-      csv += lineDelimiter;
+      tsv = '';
+      tsv += colnames.join(columnDelimiter);
+      tsv += lineDelimiter;
 
       assay_data.forEach(function(item) {
           counter = 0;
           colnames.forEach(function(key) {
-              if (counter > 0) csv += columnDelimiter;
+              if (counter > 0) tsv += columnDelimiter;
 
-              csv += item[key];
+              tsv += item[key];
               counter ++;
           });
-          csv += lineDelimiter;
+          tsv += lineDelimiter;
       });
 
-      return csv
+      return tsv
 }
 
 
