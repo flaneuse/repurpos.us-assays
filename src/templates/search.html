@@ -1,0 +1,21 @@
+{% extends "layout.html" %} {% block title %} search mockup {% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-10">
+    <h1 class="title assay-title">search results</h1>
+  </div>
+
+  <div class="row vis">
+
+  </div>
+
+</div>
+
+
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+<script src="/static/lib/d3v4+jetpack.js"></script>
+<script src="/static/lib/d3-scale-chromatic.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/search_mock.js') }}"></script>
+
+{% endblock %}

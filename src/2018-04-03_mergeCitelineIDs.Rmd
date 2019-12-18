@@ -1,0 +1,154 @@
+---
+title: "Test merge RFM ids with vendor database"
+output: html_notebook
+---
+
+# Background
+Within the Reframe compound library, compounds are matched to vendor annotation data via SMILES strings. However, in the conversion to Reframe unqiue IDs, different SMILES strings were generated, which no longer match to the vendor data.
+
+# Assumptions
+Assuming the original generation of the SMILES string was correct, we'll treat that as ground truth. If that's the case, do the IDs in the Calibr file match to the existing vendor data?
+
+## Read in files
+* Annotation data from Sebastian; previously tried to merge to RFM ids
+* "Source" data from Mitch and Calibr
+```{r}
+library(tidyverse)
+library(readxl)
+
+# Import data -------------------------------------------------------------
+gvk_file = '~/Documents/repurpose/data/gvk_w_reframe_id.csv'
+informa_file = '~/Documents/repurpose/data/informa_w_reframe_id.csv'
+integrity_file = '~/Documents/repurpose/data/integrity_w_reframe_id.csv'
+orig_file = '~/Documents/repurpose/data/20180403_HVAC_info.xlsx'
+
+gvk = read_csv(gvk_file)
+gvk %>% glimpse()
+
+
+informa = read_csv(informa_file)
+informa %>% glimpse()
+
+
+integrity = read_csv(integrity_file)
+integrity %>% glimpse()
+
+source = read_excel(orig_file)
+source %>% glimpse()
+
+gvk_ids = gvk %>% pull(gvk_id)
+source_gvk = source %>% pull(gvk_equiv_id)
+
+integrity_ids = integrity %>% pull(id)
+source_int = source %>% pull(integrity_equiv_id)
+
+
+informa_ids = informa %>% separate(col = 'Drug Name', into = c('first', 'second'), sep = '\n', remove = FALSE) %>% pull(`first`)
+source_inf = source %>% pull(citeline_equiv_id)
+
+```
+
+# The canary
+Using the `status` column within source data to test if merge worked properly
+```{r}
+source %>% count(is.na(status))
+```
+
+
+# Merge #1: GVK to base dataset
+Merge on SMILES string + SMILES in column D + HVAC ID + GVK ID
+```{r gvk_merge}
+
+merged_g = gvk %>% left_join(source, by = c("sub_smiles" = "smiles", "hvac_id" = "internal_id", "gvk_id" = "gvk_equiv_id"))
+merged_g = gvk %>% left_join(source, by = c("hvac_id" = "internal_id"))
+
+merged_g %>% count(is.na(status))
+
+```
+
+
+# Merge #2: Integrity to base dataset
+Merge on SMILES string + SMILES in column D + GVK ID
+```{r integrity_merge}
+
+merged_i = integrity %>% left_join(source, by = c("smiles" = "smiles", "id" = "integrity_equiv_id"))
+merged_i = gvk %>% left_join(source, by = c("id" = "intgrity_equiv_id"))
+
+merged_i %>% count(is.na(status.y))
+
+```
+
+```{r}
+calcVenn = function(target, source_ids, title) {
+
+left = setdiff(target, source_ids) %>% length()
+right = setdiff(source_ids, target) %>% length()
+common = intersect(source_ids, target) %>% length()
+
+df = tribble(
+  ~left, ~right,  ~common,
+  left, right, common
+)
+
+p = ggplot(df, aes(y = 1)) +
+  geom_point(aes(x = 1), size = 60, shape = 21) +
+  geom_point(aes(x = 1.5), size = 60, shape = 21) + 
+  
+  geom_text(aes(x = 1.25, label = common)) + 
+  geom_text(aes(x = 0.9, label = left)) + 
+  geom_text(aes(x = 1.6, label = right)) + 
+  
+  ggtitle(title) + 
+  
+  xlim(c(0, 3)) +
+  theme_void()
+
+print(p)
+
+# return(df)
+}
+
+```
+
+```{r}
+
+
+calcVenn(gvk_ids, source_gvk, "GVK ID overlap with 20180403_HVAC_info.xlsx")
+
+
+calcVenn(integrity_ids, source_int, "Integrity ID overlap with 20180403_HVAC_info.xlsx")
+
+calcVenn(informa_ids, source_inf, "Informa/Citeline ID overlap with 20180403_HVAC_info.xlsx")
+
+```
+```{r}
+source %>% select(hvac_id, calibr_id) %>% distinct()%>% count(hvac_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, internal_id) %>% distinct()%>% count(gvk_equiv_id)) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, internal_id) %>% distinct()%>% count(gvk_equiv_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, internal_id) %>% distinct()%>% count(internal_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, hvac_id) %>% distinct()%>% count(gvk_equiv_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, internal_id) %>% distinct()%>% count(gvk_equiv_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, hvac_id) %>% distinct()%>% count(gvk_equiv_id) %>% arrange(desc(n))
+source %>% select(gvk_equiv_id, hvac_id) %>% distinct()%>% count(hvac_id) %>% arrange(desc(n))
+source %>% select(integrity_equiv_id, hvac_id) %>% distinct()%>% count(hvac_id) %>% arrange(desc(n))
+source %>% select(citeline_equiv_id, hvac_id) %>% distinct()%>% count(hvac_id) %>% arrange(desc(n))
+rfm = source %>% pull(hvac_id) %>% unique()
+assay = read_excel('Documents/repurpose/data/Copy of 20180216_EC50_DATA_RFM_IDs.xlsx')
+View(assay)
+assay = read_excel('Documents/repurpose/data/Copy of 20180216_EC50_DATA_RFM_IDs.xlsx', sheet = 2)
+assay = read_excel('Documents/repurpose/data/Copy of 20180216_EC50_DATA_RFM_IDs.xlsx', sheet = 3)
+assay = read_excel('Documents/repurpose/data/Copy of 20180216_EC50_DATA_RFM_IDs.xlsx', sheet = 4)
+assay_rfm = assay %>% pull(ID) %>% unique()
+setdiff(assay_rfm, rfm)
+rfm = source %>% mutate(vendor = !is.na(gvk_equiv_id)) %>% select(hvac_id, vendor) %>% distinct()
+rfm %>% count(vendor)
+rfm = source %>% mutate(vendor = !is.na(gvk_equiv_id) | !is.na(citeline_equiv_id) | !is.na(integrity_equiv_id)) %>% select(hvac_id, vendor) %>% distinct()
+rfm %>% count(vendor)
+length(setdiff(assay_rfm, rfm))
+length(setdiff(assay_rfm, rfm$hvac_id))
+assay_rfm = assay %>% select(ID) %>% distinct()
+ass_join = left_join(assay_rfm, rfm, by=c("ID"="hvac_id"))
+ass_join %>% filter(vendor == F)
+
+```
+

@@ -21,6 +21,15 @@ def make_homepage():
     return render_template('assay_home.html', df = df)
 
 
+# Create homepage
+@app.route('/search-mockup')
+def make_search():
+    assay_df = {
+        'title': df.title,
+        'id': df.genedata_id
+    }
+    return render_template('search.html', df = assay_df)
+
 # individual page template
 def make_assays(row_id):
     # Filter data to put in the right format.
@@ -75,3 +84,6 @@ for idx, row in df.iterrows():
     "page" + str(row.id),
     partial(make_assays, row.id) # view function to render the page
     )
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1',port=5050,debug=True)
